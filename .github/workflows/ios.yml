@@ -2,18 +2,24 @@ name: Build NcnsDSH IPA
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
   push:
     paths:
       - "App/**"
       - "project.yml"
       - ".github/workflows/ios.yml"
 
+concurrency:
+  group: ncnsdsh-ipa
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
