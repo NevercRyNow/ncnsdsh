@@ -5,12 +5,16 @@ import SwiftUI
 struct LocalRuntimeView: View {
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var perf: PerformanceCenter
+    @EnvironmentObject private var store: HostStore
+    @EnvironmentObject private var environment: EnvironmentManager
     @Environment(\.dismiss) private var dismiss
 
     @ObservedObject private var log = RuntimeLog.shared
 
     @State private var confirmReset = false
     @State private var confirmUninstall = false
+    @State private var showLinux = false
+    @State private var pendingRemoval: Host?
 
     private var running: Bool { settings.silentAudio || settings.keepRunning }
 
@@ -21,6 +25,7 @@ struct LocalRuntimeView: View {
                     header
                     controls
                     autoStart
+                    linuxSection
                     logCard
                     environment
                     danger
@@ -51,6 +56,26 @@ struct LocalRuntimeView: View {
                 reset()
             }
             Button("取消", role: .cancel) {}
+        }
+        .sheet(isPresented: $showLinux) {
+            LinuxServerSheet().environmentObject(store).environmentObject(environment)
+        }
+        .confirmationDialog(
+            pendingRemoval.map { "移除 \($0.displayName)？" } ?? "",
+            isPresented: Binding(
+                get: { pendingRemoval != nil },
+                set: { if !$0 { pendingRemoval = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("移除", role: .destructive) {
+                if let host = pendingRemoval {
+                    store.forget(host)
+                    log.log("已移除 Linux 环境：\(host.displayName)", level: .warn)
+                }
+                pendingRemoval = nil
+            }
+            Button("取消", role: .cancel) { pendingRemoval = nil }
         }
         .confirmationDialog("卸载会删除工作区里的全部文件，无法恢复。", isPresented: $confirmUninstall, titleVisibility: .visible) {
             Button("删除工作区", role: .destructive) {
@@ -136,6 +161,86 @@ struct LocalRuntimeView: View {
         }
         .padding(16)
         .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var linuxHosts: [Host] {
+        store.hosts.filter { $0.kind == .linux }
+    }
+
+    private var linuxSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Linux 环境")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(DSH.Palette.tertiary)
+                .textCase(.uppercase)
+                .tracking(1.1)
+
+            VStack(spacing: 0) {
+                if linuxHosts.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("还没有添加 Linux 服务器")
+                            .font(DSH.TypeScale.body)
+                            .foregroundStyle(DSH.Palette.text)
+                        Text("Linux 跑在远端服务器上，App 里不安装 Linux 运行时。")
+                            .font(DSH.TypeScale.footnote)
+                            .foregroundStyle(DSH.Palette.tertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button {
+                            Haptics.tap()
+                            showLinux = true
+                        } label: {
+                            Text("添加 Linux 服务器")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(DSH.Palette.accent)
+                                .padding(.top, 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    ForEach(linuxHosts) { host in
+                        linuxRow(host)
+                        if host.id != linuxHosts.last?.id {
+                            divider
+                        }
+                    }
+                }
+            }
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+    }
+
+    private func linuxRow(_ host: Host) -> some View {
+        VStack(spacing: 0) {
+            info("地址", host.originText)
+            divider
+            info("系统", "未探测")
+            divider
+            info("连接", store.current?.id == host.id ? "已连接" : "离线")
+
+            divider
+
+            Button {
+                Haptics.tap()
+                pendingRemoval = host
+            } label: {
+                HStack {
+                    Text("移除 Linux 环境")
+                        .font(DSH.TypeScale.body)
+                        .foregroundStyle(DSH.Palette.danger)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(DSH.Palette.tertiary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private var logCard: some View {
