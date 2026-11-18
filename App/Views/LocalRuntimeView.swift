@@ -30,6 +30,7 @@ struct LocalRuntimeView: View {
                     controls
                     autoStart
                     runtimeSection
+                    capabilitySection
                     backupsSection
                     linuxSection
                     logCard
@@ -236,6 +237,58 @@ struct LocalRuntimeView: View {
         }
         .onAppear {
             runtimes.refresh(host: store.current)
+        }
+    }
+
+    /// 三种运行时各自能做什么、为什么做不了别的。写的是代码里真实存在的限制，
+    /// 不是产品宣传：Linux 本机不可用，原生运行时也不执行任意命令。
+    private var capabilitySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("能力与限制")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Fluid.Palette.slate)
+                .textCase(.uppercase)
+                .tracking(1.1)
+
+            VStack(alignment: .leading, spacing: 12) {
+                capabilityRow(
+                    "cpu",
+                    "原生运行时",
+                    "只接受工具调用，不执行任意命令；随 App 更新，不能单独升级。"
+                )
+                capabilityRow(
+                    "server.rack",
+                    "Linux 运行时",
+                    "iOS 不安装 rootfs，所以「在本机跑 Linux」这一档明确不可用；Linux 只作为远端服务器接入。"
+                )
+                capabilityRow(
+                    "desktopcomputer",
+                    "远程运行时",
+                    "需要在主机上运行 dsh web --host 0.0.0.0，再把地址与 token 填进来。"
+                )
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fluidSurface()
+        }
+    }
+
+    private func capabilityRow(_ symbol: String, _ title: String, _ detail: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Fluid.Palette.iceBlue)
+                .frame(width: 22)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Fluid.Palette.text)
+                Text(detail)
+                    .font(Fluid.Typography.caption)
+                    .foregroundStyle(Fluid.Palette.mist)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 
