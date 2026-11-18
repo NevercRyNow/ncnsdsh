@@ -85,3 +85,34 @@
 这个会话跑在 iPhone 上的 DSH 里：没有 Swift 编译器、没有 Xcode、没有模拟器。
 编译只能交给 GitHub Actions 的 macOS runner；「运行验收」只能做到出包 + 解包校验
 Info.plist 与 SHA256。SwiftUI 的观感必须由人装在手机上确认。
+
+## 当前状态：GitHub 不可达（2026-11-18 起）
+
+| 位置 | 版本 |
+| --- | --- |
+| 本地 `main` | 2.17.4（build 10） |
+| GitHub `main` | 2.17.2（`f635aa7`） |
+
+- `github.com`、`api.github.com` 在这台设备上被 TCP reset（DNS 把 github.com 指到
+  `66.220.148.145`，真实 API IP 也连不上）。
+- `raw.githubusercontent.com`、`objects.githubusercontent.com` 可以连——所以能读到
+  GitHub 上的内容，但**不能 push、不能查 CI、不能取 release 资产**。
+- 因此 2.17.2 之后的构建状态未知；**2.16.1 是最后一个验证过的包**。
+
+本地已提交但没验证的改动：
+
+- `f635aa7` 2.17.2 · `ToolStatus` 补 `Equatable`、工作台 pane 常驻 + 专注模式
+- `242abc2` 2.17.3 · Runtime 页「能力与限制」
+- `05e6e93` / `02350fb` 2.17.4 · 设置页分区 + `@ViewBuilder` 参数写法
+- `126a731` · 装机验收清单 `acceptance-2.17.md`
+
+网络恢复后的恢复步骤（脚本已经写好，`~/work/ship.sh`）：
+
+1. `git push` 到 main（脚本会重试 5 次）；
+2. 等新 run，**排队被 GitHub 清掉就自动 rerun**（macOS runner 现在排队超过 15 分钟会被清）；
+3. 构建成功后跑 `verify_ipa.py`：下载 release 资产、比对 API digest、解包读
+   `CFBundleShortVersionString` / `CFBundleVersion`。
+
+恢复时要注意的一件事：4 个提交是一起进构建的，如果编译失败，先看日志里第一个
+`error:` 的文件；已知的高风险点是 `App/Workbench/WorkbenchView.swift`（2.17.2 重写）
+和 `App/Views/SettingsView.swift`（2.17.4 新加的分区 helper）。
