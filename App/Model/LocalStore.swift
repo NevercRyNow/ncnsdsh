@@ -92,13 +92,21 @@ final class LocalStore: ObservableObject {
     @Published private(set) var stages: [LocalStage] = []
     @Published private(set) var trace: TurnTrace?
     @Published private(set) var queue: [QueuedPrompt] = []
+    @Published private(set) var todayInput = 0
+    @Published private(set) var todayOutput = 0
+    @Published private(set) var todayTurns = 0
     @Published var error: String?
 
     private var task: Task<Void, Never>?
     private var pendingToolMessage: UUID?
     private let fileURL: URL
 
+    private let defaults = UserDefaults.standard
+
     init() {
+        todayInput = defaults.integer(forKey: "usage.input")
+        todayOutput = defaults.integer(forKey: "usage.output")
+        todayTurns = defaults.integer(forKey: "usage.turns")
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         let folder = base.appendingPathComponent("NcnsDSH", isDirectory: true)
@@ -277,6 +285,31 @@ final class LocalStore: ObservableObject {
         }
     }
 
+    /// 今日用量：按本地日累加，跨日清零。对应 DSH Go 的「今日用量」。
+    private func recordUsage(prompt: Int, completion: Int, cacheHit: Int) {
+        let key = "usage.day"
+        let today = Self.dayStamp()
+        if defaults.string(forKey: key) != today {
+            defaults.set(today, forKey: key)
+            defaults.set(0, forKey: "usage.input")
+            defaults.set(0, forKey: "usage.output")
+            defaults.set(0, forKey: "usage.turns")
+        }
+        todayInput = defaults.integer(forKey: "usage.input") + prompt
+        todayOutput = defaults.integer(forKey: "usage.output") + completion
+        todayTurns = defaults.integer(forKey: "usage.turns") + 1
+        defaults.set(todayInput, forKey: "usage.input")
+        defaults.set(todayOutput, forKey: "usage.output")
+        defaults.set(todayTurns, forKey: "usage.turns")
+        _ = cacheHit
+    }
+
+    private static func dayStamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+
     private func closeTraceStep(kind: TraceKind) {
         guard var trace else { return }
         if let index = trace.steps.lastIndex(where: { $0.kind == kind && $0.end == nil }) {
@@ -318,6 +351,7 @@ final class LocalStore: ObservableObject {
             trace?.promptTokens = prompt
             trace?.completionTokens = completion
             trace?.cacheHit = cacheHit
+            recordUsage(prompt: prompt, completion: completion, cacheHit: cacheHit)
 
         case .delta(let piece):
             if trace?.firstTokenAt == nil {
