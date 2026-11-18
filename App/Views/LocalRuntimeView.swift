@@ -8,6 +8,7 @@ struct LocalRuntimeView: View {
     @EnvironmentObject private var store: HostStore
     @EnvironmentObject private var environmentManager: EnvironmentManager
     @EnvironmentObject private var runtimes: RuntimeManager
+    @EnvironmentObject private var local: LocalStore
     @Environment(\.dismiss) private var dismiss
 
     @ObservedObject private var log = RuntimeLog.shared
@@ -464,6 +465,10 @@ struct LocalRuntimeView: View {
                 info("安装插件", "仅目录，无运行时")
                 divider
                 info("切到后台", "可能被系统暂停")
+                divider
+                info("今日用量", "\(local.todayTurns) 轮 · 入 \(local.todayInput) · 出 \(local.todayOutput)")
+                divider
+                info("沙箱模式", Sandbox.shared.policy.mode.title)
             }
             .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
