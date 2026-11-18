@@ -7,6 +7,7 @@ struct LocalRuntimeView: View {
     @EnvironmentObject private var perf: PerformanceCenter
     @EnvironmentObject private var store: HostStore
     @EnvironmentObject private var environmentManager: EnvironmentManager
+    @EnvironmentObject private var runtimes: RuntimeManager
     @Environment(\.dismiss) private var dismiss
 
     @ObservedObject private var log = RuntimeLog.shared
@@ -25,6 +26,7 @@ struct LocalRuntimeView: View {
                     header
                     controls
                     autoStart
+                    runtimeSection
                     linuxSection
                     logCard
                     environment
@@ -161,6 +163,54 @@ struct LocalRuntimeView: View {
         }
         .padding(16)
         .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var runtimeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("运行时")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(DSH.Palette.tertiary)
+                .textCase(.uppercase)
+                .tracking(1.1)
+
+            VStack(spacing: 0) {
+                ForEach(runtimes.statuses, id: \.kind) { status in
+                    HStack(spacing: 12) {
+                        Image(systemName: status.kind.symbol)
+                            .font(.system(size: 13))
+                            .foregroundStyle(status.state.isRunning ? DSH.Palette.accent : DSH.Palette.tertiary)
+                            .frame(width: 22)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(status.kind.title)
+                                .font(DSH.TypeScale.body)
+                                .foregroundStyle(DSH.Palette.text)
+                            Text(status.detail)
+                                .font(DSH.TypeScale.footnote)
+                                .foregroundStyle(DSH.Palette.tertiary)
+                                .lineLimit(2)
+                        }
+
+                        Spacer(minLength: 6)
+
+                        Text(status.state.label)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(status.state.isRunning ? DSH.Palette.success : DSH.Palette.tertiary)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 11)
+
+                    if status.kind != runtimes.statuses.last?.kind {
+                        divider
+                    }
+                }
+            }
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .onAppear {
+            runtimes.refresh(host: store.current)
+        }
     }
 
     private var linuxHosts: [Host] {

@@ -15,6 +15,7 @@ struct RootView: View {
     @StateObject private var modelConfig = ModelConfigurationStore()
     @StateObject private var environment = EnvironmentManager()
     @StateObject private var performance = PerformanceCenter()
+    @StateObject private var runtimes = RuntimeManager()
 
     var body: some View {
         MainShell()
@@ -30,6 +31,7 @@ struct RootView: View {
         .environmentObject(modelConfig)
         .environmentObject(environment)
         .environmentObject(performance)
+        .environmentObject(runtimes)
         .preferredColorScheme(settings.appearance.scheme ?? .dark)
         .animation(.easeInOut(duration: 0.24), value: store.current?.id)
         .onAppear {
