@@ -2,7 +2,6 @@ import UIKit
 
 /// 集中式触觉。六档，预热生成器，避免第一次点击的延迟。
 /// 全 App 只从这里出发，便于统一静音与降频。
-@MainActor
 enum Haptics {
     private static let selection = UISelectionFeedbackGenerator()
     private static let lightImpact = UIImpactFeedbackGenerator(style: .light)
