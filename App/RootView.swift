@@ -13,6 +13,8 @@ struct RootView: View {
     @StateObject private var chrome = AppChrome()
     @StateObject private var settings = SettingsStore()
     @StateObject private var modelConfig = ModelConfigurationStore()
+    @StateObject private var environment = EnvironmentManager()
+    @StateObject private var performance = PerformanceCenter()
 
     var body: some View {
         MainShell()
@@ -26,6 +28,8 @@ struct RootView: View {
         .environmentObject(chrome)
         .environmentObject(settings)
         .environmentObject(modelConfig)
+        .environmentObject(environment)
+        .environmentObject(performance)
         .preferredColorScheme(settings.appearance.scheme ?? .dark)
         .animation(.easeInOut(duration: 0.24), value: store.current?.id)
         .onAppear {

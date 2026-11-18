@@ -5,12 +5,15 @@ struct MoreView: View {
     @EnvironmentObject private var plugins: PluginStore
     @EnvironmentObject private var demo: DemoStore
     @EnvironmentObject private var store: HostStore
+    @EnvironmentObject private var environment: EnvironmentManager
 
     @State private var showPlugins = false
     @State private var showAutomations = false
     @State private var showBuild = false
     @State private var showDevices = false
     @State private var showSettings = false
+    @State private var showEnvironment = false
+    @State private var showPerformance = false
 
     var body: some View {
         ScrollView {
@@ -31,6 +34,16 @@ struct MoreView: View {
                     row(icon: "desktopcomputer", title: "设备", value: store.current == nil ? "未连接" : "已连接") { showDevices = true }
                     divider
                     row(icon: "gearshape", title: "设置", value: "") { showSettings = true }
+                }
+
+                group {
+                    row(icon: "point.3.connected.trianglepath.dotted", title: "环境", value: environment.current?.name ?? "这台 iPhone") {
+                        showEnvironment = true
+                    }
+                    divider
+                    row(icon: "speedometer", title: "性能", value: "") {
+                        showPerformance = true
+                    }
                 }
 
                 Text("NcnsDSH 2.0 · 由郑壹鸣设计与开发")
@@ -61,6 +74,12 @@ struct MoreView: View {
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
+        }
+        .sheet(isPresented: $showEnvironment) {
+            EnvironmentView().environmentObject(store).environmentObject(environment)
+        }
+        .sheet(isPresented: $showPerformance) {
+            PerformanceView()
         }
     }
 
