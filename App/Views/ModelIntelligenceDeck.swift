@@ -11,6 +11,7 @@ struct ModelIntelligenceDeck: View {
     @State private var scrollID: String?
     @State private var appeared = false
     @Namespace private var modeNamespace
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// 参考片（/tmp/ref.mp4，1180×2556，内层实际 30fps：相邻两帧常常完全相同）量出来的三个数：
     /// 1. 入场：0.067s 列表还只有影子，0.100s 五行全出来，0.233s 稳定；
@@ -203,11 +204,11 @@ struct ModelIntelligenceDeck: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             // 选中形变：选中的留在原位，其余缩小 6%、压到 85% 透明度——参考片里是别的行直接收起。
-            .scaleEffect(appeared ? (selected ? 1.0 : Measured.recedeScale) : Measured.enterScale)
-            .offset(y: appeared ? 0 : Measured.enterRise)
+            .scaleEffect(appeared ? (selected ? 1.0 : Measured.recedeScale) : (reduceMotion ? 1.0 : Measured.enterScale))
+            .offset(y: reduceMotion ? 0 : (appeared ? 0 : Measured.enterRise))
             .opacity(appeared ? (selected ? 1 : Measured.recedeOpacity) : 0)
-            .animation(Measured.settle.delay(Double(index) * Measured.stagger), value: appeared)
-            .animation(Measured.settle, value: selected)
+            .animation(Fluid.Motion.respecting(reduceMotion, Measured.settle).delay(reduceMotion ? 0 : Double(index) * Measured.stagger), value: appeared)
+            .animation(Fluid.Motion.respecting(reduceMotion, Measured.settle), value: selected)
         }
         .buttonStyle(.plain)
     }

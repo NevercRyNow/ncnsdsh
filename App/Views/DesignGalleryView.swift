@@ -5,7 +5,6 @@ import SwiftUI
 struct DesignGalleryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
-    @State private var dockSelection: AppTab = .home
 
     private var swatches: [(String, Color)] {
         [
@@ -41,7 +40,6 @@ struct DesignGalleryView: View {
                     typography
                     cores
                     motion
-                    dock
                 }
                 .padding(20)
             }
@@ -163,20 +161,6 @@ struct DesignGalleryView: View {
                             .foregroundStyle(Fluid.Palette.mist)
                     }
                 }
-            }
-        }
-    }
-
-    private var dock: some View {
-        block("Dock") {
-            VStack(spacing: 12) {
-                Text("选中胶囊用 matchedGeometryEffect 滑动；按压 0.94；侧滑切换。")
-                    .font(Fluid.Typography.caption)
-                    .foregroundStyle(Fluid.Palette.mist)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                LiquidDock(selection: $dockSelection)
-                    .padding(.horizontal, -10)
             }
         }
     }

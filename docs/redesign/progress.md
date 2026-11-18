@@ -34,10 +34,9 @@
 - `App/Views/AboutView.swift`（重做）：Hero + 版本芯片（点按复制 `NcnsDSH 2.17.x (n)`）
   + Application / Credits / Project / Acknowledgements，内置 MIT 全文；分区依次入场，
   Reduce Motion 下只淡入。版本、构建号、最低系统全部从 Bundle 读。
-- `App/Views/LiquidDock.swift`（新）：悬浮玻璃 Dock。选中胶囊 `matchedGeometryEffect`
-  连续滑动，按压回弹，侧滑/长按切换。
-- `App/Views/MainShell.swift`：**没有拆 TabView**，只隐藏系统 tab bar 并把 Dock 叠在上层，
-  底部安全区 +64pt。导航与各 tab 的状态保持原样。
+- ~~自绘悬浮 Dock~~：2.16.1 装机后出现**两条 Dock**（系统 TabBar 没有被
+  `.toolbar(.hidden, for: .tabBar)` 藏住），2.17.5 已整体回退：删掉 `LiquidDock.swift`，
+  `MainShell` 恢复系统 TabBar，mini bar 的底部距离回到 58pt。用户明确要原来的 Dock。
 
 ### 状态表达
 

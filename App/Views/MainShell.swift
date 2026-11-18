@@ -34,15 +34,6 @@ struct MainShell: View {
             }
             .tint(DSH.Palette.accent)
             .sensoryFeedback(.selection, trigger: router.tab)
-            // TabView 继续负责内容切换与状态保持，只把系统 TabBar 藏起来，
-            // 外观交给下面的 LiquidDock——不是重写导航。
-            .toolbar(.hidden, for: .tabBar)
-            .safeAreaInset(edge: .bottom) {
-                Color.clear.frame(height: 64)
-            }
-
-            LiquidDock(selection: $router.tab)
-                .zIndex(3)
 
             if let session = liveSession, !chrome.chatOpen {
                 if expanded == session.id {
@@ -59,7 +50,7 @@ struct MainShell: View {
                     }
                     .matchedGeometryEffect(id: "liveSession", in: miniNamespace)
                     .padding(.horizontal, 12)
-                    .padding(.bottom, 74)
+                    .padding(.bottom, 58)
                     .zIndex(1)
                 }
             }
