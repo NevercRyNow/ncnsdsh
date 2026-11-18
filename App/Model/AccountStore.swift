@@ -14,6 +14,8 @@ final class AccountStore: ObservableObject {
     @Published private(set) var state: State = .signedOut
     @Published private(set) var key: String = ""
     @Published var selectedModel: String = "deepseek-chat"
+    @Published private(set) var balance: Balance?
+    @Published private(set) var balanceError: String?
 
     private let keychainAccount = "deepseek.apiKey"
 
@@ -80,11 +82,42 @@ final class AccountStore: ObservableObject {
             let ids = payload.data.map(\.id).filter { $0.hasPrefix("deepseek") }
             Keychain.set(key, for: keychainAccount)
             state = .signedIn(ids.isEmpty ? ["deepseek-chat"] : ids)
+            await loadBalance()
             if !ids.contains(selectedModel) {
                 selectedModel = ids.first ?? "deepseek-chat"
             }
         } catch {
             state = .failed(error.localizedDescription)
+        }
+    }
+
+    struct Balance: Decodable {
+        struct Info: Decodable {
+            let currency: String
+            let total_balance: String
+            let granted_balance: String?
+            let topped_up_balance: String?
+        }
+        let is_available: Bool?
+        let balance_infos: [Info]?
+    }
+
+    /// DeepSeek 的余额接口：GET /user/balance。
+    func loadBalance() async {
+        guard !key.isEmpty else { return }
+        var request = URLRequest(url: URL(string: "https://api.deepseek.com/user/balance")!)
+        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 20
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                balanceError = "余额接口返回 \((response as? HTTPURLResponse)?.statusCode ?? 0)"
+                return
+            }
+            balance = try JSONDecoder().decode(Balance.self, from: data)
+            balanceError = nil
+        } catch {
+            balanceError = error.localizedDescription
         }
     }
 

@@ -11,6 +11,7 @@ struct RootView: View {
     @StateObject private var plugins = PluginStore()
     @StateObject private var phone = PhoneAuth()
     @StateObject private var chrome = AppChrome()
+    @StateObject private var settings = SettingsStore()
 
     var body: some View {
         MainShell()
@@ -22,7 +23,8 @@ struct RootView: View {
         .environmentObject(plugins)
         .environmentObject(phone)
         .environmentObject(chrome)
-        .preferredColorScheme(.dark)
+        .environmentObject(settings)
+        .preferredColorScheme(settings.appearance.scheme ?? .dark)
         .animation(.easeInOut(duration: 0.24), value: store.current?.id)
         .onAppear {
             // Siri / 快捷指令 / 小组件按下时，把意图交给当前窗口。

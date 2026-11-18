@@ -8,229 +8,88 @@ struct SettingsView: View {
     @EnvironmentObject private var local: LocalStore
     @EnvironmentObject private var phone: PhoneAuth
     @EnvironmentObject private var plugins: PluginStore
+    @EnvironmentObject private var settings: SettingsStore
 
-    @State private var showWeb = false
     @State private var showAccount = false
-    @State private var showConnect = false
-    @State private var showCredits = false
+    @State private var showPlugins = false
+    @State private var showAutomation = false
     @State private var showPhone = false
+    @State private var showCredits = false
+    @State private var showConnect = false
+    @State private var showAdvanced = false
+    @State private var showWeb = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    accountCard
-                    phoneCard
-                    hostCard
-                    dataCard
-                    localCard
-                    pluginsCard
-                    fileCard
-                    webCard
-                    aboutCard
+                VStack(spacing: 22) {
+                    accountRow
+                    entryGroup
+                    backgroundGroup
+                    widgetGroup
+                    appearanceGroup
+                    hostGroup
+                    tailGroup
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
-                .padding(.bottom, 40)
+                .padding(.bottom, 48)
             }
             .scrollIndicators(.hidden)
-            .background(Theme.ink.ignoresSafeArea())
+            .background(DSH.Palette.canvas)
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showAccount) {
-            AccountView()
-                .environmentObject(account)
+            AccountView().environmentObject(account)
         }
-        .sheet(isPresented: $showConnect) {
-            ConnectView()
-                .environmentObject(store)
+        .sheet(isPresented: $showPhone) {
+            PhoneLoginView().environmentObject(phone)
         }
         .sheet(isPresented: $showCredits) {
             CreditsView()
         }
-        .sheet(isPresented: $showPhone) {
-            PhoneLoginView()
-                .environmentObject(phone)
+        .sheet(isPresented: $showConnect) {
+            ConnectView().environmentObject(store)
+        }
+        .sheet(isPresented: $showPlugins) {
+            PluginsView().environmentObject(plugins)
+        }
+        .sheet(isPresented: $showAutomation) {
+            ScheduleView().environmentObject(demo)
+        }
+        .sheet(isPresented: $showAdvanced) {
+            advancedSheet
         }
         .sheet(isPresented: $showWeb) {
             if let host = store.current {
-                WebScreen(host: host)
-                    .preferredColorScheme(.dark)
+                WebScreen(host: host).preferredColorScheme(.dark)
             }
         }
     }
 
-    private var hostCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                if store.current != nil {
-                    StatusDot()
-                    Text("已连接")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                } else {
-                    Circle().fill(Color.white.opacity(0.3)).frame(width: 7, height: 7)
-                    Text("未连接")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Theme.muted)
-                }
-                Spacer()
-                Text(store.current?.displayName ?? "—")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Theme.muted)
-                    .lineLimit(1)
-            }
+    // MARK: - Account
 
-            if let host = store.current {
-                Text(host.originText)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(Theme.dim)
-                    .lineLimit(1)
-
-                HStack(spacing: 10) {
-                    Button("重新配对") {
-                        Haptics.soft()
-                        store.disconnect()
-                    }
-                    .buttonStyle(NcnsGlassButtonStyle(compact: true))
-
-                    Button("在 Safari 打开") {
-                        if let url = URL(string: host.originText) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                    .buttonStyle(NcnsGlassButtonStyle(compact: true))
-                }
-            } else {
-                Button("连接电脑") {
-                    Haptics.tap()
-                    showConnect = true
-                }
-                .buttonStyle(NcnsGlassButtonStyle(compact: true))
-            }
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .ncnsGlass(cornerRadius: 22)
-    }
-
-    private var dataCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label("数据源", systemImage: "cylinder.split.1x2")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.white)
-                Spacer()
-                Text("演示数据")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Theme.mint)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(Theme.mint.opacity(0.14), in: Capsule())
-            }
-
-            Text("界面和交互已经按最终形态跑通，数据还是本地的 demo。接上 `dsh-plugin-mobile-gateway` 的 WebSocket 之后，这里会显示连接状态与事件吞吐。")
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .ncnsGlass(cornerRadius: 22)
-    }
-
-    private var accountCard: some View {
+    private var accountRow: some View {
         Button {
             Haptics.tap()
             showAccount = true
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: account.isSignedIn ? "person.crop.circle.fill.badge.checkmark" : "person.crop.circle")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(account.isSignedIn ? Theme.mint : Theme.accent)
-                    .frame(width: 38, height: 38)
-                    .background((account.isSignedIn ? Theme.mint : Theme.accent).opacity(0.14), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                Image(systemName: account.isSignedIn ? "person.crop.circle.fill" : "person.crop.circle")
+                    .font(.system(size: 30))
+                    .foregroundStyle(account.isSignedIn ? DSH.Palette.accent : DSH.Palette.tertiary)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("DeepSeek 账号")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.white)
-                    Text(account.isSignedIn ? "已登录 · \(account.selectedModel)" : "未登录 · 登录后可以用本机模式")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.muted)
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Theme.dim)
-            }
-            .padding(16)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .ncnsGlass(cornerRadius: 22)
-    }
-
-    private var localCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: "internaldrive")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.mint)
-                    .frame(width: 34, height: 34)
-                    .background(Theme.mint.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("本机工作区")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.white)
-                    Text("Documents/NcnsDSH/workspace")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(Theme.muted)
-                }
-
-                Spacer(minLength: 8)
-
-                Text("\(local.recent.count) 个会话")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.dim)
-            }
-
-            Text("本机会话能读写这个目录。它不在 iCloud 里，也不会同步给宿主。")
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .ncnsGlass(cornerRadius: 22)
-    }
-
-    private var phoneCard: some View {
-        Button {
-            Haptics.tap()
-            showPhone = true
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: phone.signedIn ? "iphone.gen3.badge.checkmark" : "iphone")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(phone.signedIn ? DSH.Palette.success : DSH.Palette.accent)
-                    .frame(width: 38, height: 38)
-                    .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("手机号")
+                    Text(account.isSignedIn ? "已登录 DeepSeek" : "登录 DeepSeek")
                         .font(DSH.TypeScale.headline)
                         .foregroundStyle(DSH.Palette.text)
-                    Text(phone.signedIn ? phone.masked : "未登录 · 用于同步与提醒")
+                    Text(account.isSignedIn ? balanceLine : "账号与余额 · 未登录")
                         .font(DSH.TypeScale.footnote)
-                        .foregroundStyle(DSH.Palette.secondary)
+                        .foregroundStyle(DSH.Palette.tertiary)
                 }
 
-                Spacer(minLength: 8)
+                Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .bold))
@@ -240,151 +99,259 @@ struct SettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .ncnsGlass(cornerRadius: 16)
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private var pluginsCard: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "puzzlepiece.extension")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(DSH.Palette.accent)
-                .frame(width: 34, height: 34)
-                .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    private var balanceLine: String {
+        guard let info = account.balance?.balance_infos?.first else { return "账号与余额" }
+        let symbol = info.currency.uppercased() == "CNY" ? "¥" : "$"
+        return "余额 \(symbol)\(info.total_balance)"
+    }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("插件")
-                    .font(DSH.TypeScale.headline)
-                    .foregroundStyle(DSH.Palette.text)
-                Text("已安装 \(plugins.installed.count) 个 · 商店里还有 \(plugins.store.count) 个")
-                    .font(DSH.TypeScale.footnote)
-                    .foregroundStyle(DSH.Palette.secondary)
+    // MARK: - Entries
+
+    private var entryGroup: some View {
+        VStack(spacing: 0) {
+            row(icon: "puzzlepiece.extension", title: "插件", value: "\(plugins.installed.count) 个") {
+                showPlugins = true
             }
-
-            Spacer()
+            divider
+            row(icon: "arrow.triangle.2.circlepath", title: "自动化", value: "\(demo.schedules.count) 个") {
+                showAutomation = true
+            }
+            divider
+            row(icon: "iphone", title: "手机号", value: phone.signedIn ? phone.masked : "未登录") {
+                showPhone = true
+            }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .ncnsGlass(cornerRadius: 16)
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private var fileCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "folder")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: 34, height: 34)
-                    .background(Theme.accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    private var backgroundGroup: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("后台运行")
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("文件")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.white)
-                    Text(AppFiles.displayPath)
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(Theme.muted)
-                }
-
-                Spacer()
+            VStack(spacing: 0) {
+                toggleRow(icon: "speaker.slash", title: "静音音频", isOn: $settings.silentAudio)
+                divider
+                toggleRow(icon: "hourglass", title: "任务续跑", isOn: $settings.keepRunning)
             }
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-            Text("本机会话读写的 workspace、构建下载的 IPA 都在这里。在「文件」App 的「我的 iPhone → NcnsDSH」里能直接看到、拷出来。")
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.muted)
+            Text("离开 App 后播放无声音频，任务、自动化和开发服务器都不停，会多耗一些电。音频被来电等打断时，进行中的任务仍会继续跑完。")
+                .font(DSH.TypeScale.footnote)
+                .foregroundStyle(DSH.Palette.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
-
-            HStack(spacing: 10) {
-                Button("在「文件」中打开") {
-                    Haptics.tap()
-                    AppFiles.reveal()
-                }
-                .buttonStyle(NcnsGlassButtonStyle(compact: true))
-
-                Button("复制路径") {
-                    AppFiles.copyPath()
-                    Haptics.success()
-                }
-                .buttonStyle(NcnsGlassButtonStyle(compact: true))
-            }
+                .padding(.horizontal, 4)
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .ncnsGlass(cornerRadius: 22)
     }
 
-    private var webCard: some View {
+    private var widgetGroup: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("小组件")
+
+            toggleRow(icon: "eye", title: "显示会话标题", isOn: $settings.showSessionTitles)
+                .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            Text("关掉后，主屏幕和锁屏小组件只显示数量和状态。设备锁定时，标题总会被打码。")
+                .font(DSH.TypeScale.footnote)
+                .foregroundStyle(DSH.Palette.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
+        }
+    }
+
+    private var appearanceGroup: some View {
+        VStack(spacing: 0) {
+            menuRow(icon: "circle.lefthalf.filled", title: "外观", value: settings.appearance.label) {
+                ForEach(SettingsStore.Appearance.allCases) { item in
+                    Button(item.label) { settings.appearance = item }
+                }
+            }
+            divider
+            menuRow(icon: "globe", title: "语言", value: settings.language.label) {
+                ForEach(SettingsStore.Language.allCases) { item in
+                    Button(item.label) { settings.language = item }
+                }
+            }
+        }
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var hostGroup: some View {
+        VStack(spacing: 0) {
+            row(icon: "desktopcomputer", title: "远端宿主", value: store.current?.displayName ?? "未连接") {
+                showConnect = true
+            }
+            divider
+            row(icon: "folder", title: "文件", value: AppFiles.displayPath) {
+                AppFiles.reveal()
+            }
+            if store.current != nil {
+                divider
+                row(icon: "globe", title: "网页版", value: "插件页 / 终端") {
+                    showWeb = true
+                }
+            }
+        }
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var tailGroup: some View {
+        VStack(spacing: 0) {
+            row(icon: "screwdriver", title: "高级", value: "") {
+                showAdvanced = true
+            }
+            divider
+            row(icon: "info.circle", title: "关于", value: "郑壹鸣") {
+                showCredits = true
+            }
+        }
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    // MARK: - Advanced
+
+    private var advancedSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    infoLine("版本", Bundle.main.appVersion)
+                    infoLine("本机工作区", AppFiles.workspace.path)
+                    infoLine("构建产物", AppFiles.builds.path)
+                    infoLine("宿主", store.current?.originText ?? "—")
+                    infoLine("插件", "\(plugins.installed.count) 装 / \(plugins.store.count) 可装")
+                    infoLine("本机会话", "\(local.recent.count) 个")
+                    infoLine("外观", settings.appearance.label)
+                    infoLine("语言", settings.language.label)
+                    infoLine("后台音频", settings.silentAudio ? "开" : "关")
+                }
+                .padding(20)
+            }
+            .background(DSH.Palette.canvas)
+            .navigationTitle("高级")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { showAdvanced = false }
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func infoLine(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(DSH.TypeScale.footnote)
+                .foregroundStyle(DSH.Palette.tertiary)
+            Text(value)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(DSH.Palette.text)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    // MARK: - Pieces
+
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(DSH.TypeScale.footnote)
+            .foregroundStyle(DSH.Palette.tertiary)
+            .padding(.horizontal, 4)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(DSH.Palette.hairline)
+            .frame(height: 0.5)
+            .padding(.leading, 54)
+    }
+
+    private func row(icon: String, title: String, value: String, action: @escaping () -> Void) -> some View {
         Button {
             Haptics.tap()
-            showWeb = true
+            action()
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "globe")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: 34, height: 34)
-                    .background(Theme.accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(DSH.Palette.text)
+                    .frame(width: 26)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("网页版")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.white)
-                    Text("插件页、终端、文件预览这些还没原生的功能")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Theme.muted)
-                }
+                Text(title)
+                    .font(DSH.TypeScale.body)
+                    .foregroundStyle(DSH.Palette.text)
 
                 Spacer(minLength: 8)
 
+                Text(value)
+                    .font(DSH.TypeScale.footnote)
+                    .foregroundStyle(DSH.Palette.tertiary)
+                    .lineLimit(1)
+
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Theme.dim)
+                    .foregroundStyle(DSH.Palette.tertiary)
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .ncnsGlass(cornerRadius: 22)
-        .disabled(store.current == nil)
-        .opacity(store.current == nil ? 0.5 : 1)
     }
 
-    private var aboutCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 12) {
-                BrandMark(size: 44)
-                BrandWordmark()
-                Spacer()
-                Text(Bundle.main.appVersion)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(Theme.dim)
-            }
+    private func toggleRow(icon: String, title: String, isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(DSH.Palette.text)
+                .frame(width: 26)
 
-            Text("视觉参照 tv 与 Apple Music；玻璃只出现在 chrome 和可交互卡片上，内容区保持不透明，保证对比度。")
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(title)
+                .font(DSH.TypeScale.body)
+                .foregroundStyle(DSH.Palette.text)
 
-            HStack(spacing: 12) {
-                BrandBadge()
-                Spacer()
-                Button {
-                    Haptics.tap()
-                    showCredits = true
-                } label: {
-                    HStack(spacing: 4) {
-                        Text("关于与制作人员")
-                            .font(.system(size: 12, weight: .medium))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .bold))
-                    }
-                    .foregroundStyle(Theme.accent)
+            Spacer()
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(DSH.Palette.accent)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+    }
+
+    private func menuRow<Content: View>(icon: String, title: String, value: String, @ViewBuilder menu: () -> Content) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(DSH.Palette.text)
+                .frame(width: 26)
+
+            Text(title)
+                .font(DSH.TypeScale.body)
+                .foregroundStyle(DSH.Palette.text)
+
+            Spacer()
+
+            Menu {
+                menu()
+            } label: {
+                HStack(spacing: 4) {
+                    Text(value)
+                        .font(DSH.TypeScale.footnote)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
                 }
-                .buttonStyle(.plain)
+                .foregroundStyle(DSH.Palette.tertiary)
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .ncnsGlass(cornerRadius: 22)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 13)
     }
 }
 
