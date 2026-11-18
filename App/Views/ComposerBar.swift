@@ -10,11 +10,16 @@ struct ComposerBar: View {
     var onSend: () -> Void
     var onAttach: (() -> Void)?
     var onModel: (() -> Void)?
+    var onQueue: (() -> Void)?
 
     @FocusState.Binding var focused: Bool
 
     private var canSend: Bool {
         !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isBusy
+    }
+
+    private var canQueue: Bool {
+        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && isBusy && onQueue != nil
     }
 
     var body: some View {
@@ -65,20 +70,26 @@ struct ComposerBar: View {
                 Spacer(minLength: 8)
 
                 Button {
+                    if isBusy {
+                        guard canQueue else { return }
+                        Haptics.light()
+                        onQueue?()
+                        return
+                    }
                     guard canSend else { return }
                     Haptics.soft()
                     onSend()
                 } label: {
-                    Image(systemName: "arrow.up")
+                    Image(systemName: isBusy ? "text.badge.plus" : "arrow.up")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
                         .background(
-                            Circle().fill(canSend ? DSH.Palette.accent : Color.white.opacity(0.12))
+                            Circle().fill(isBusy ? (canQueue ? DSH.Palette.warning : Color.white.opacity(0.12)) : (canSend ? DSH.Palette.accent : Color.white.opacity(0.12)))
                         )
                 }
                 .buttonStyle(.plain)
-                .disabled(!canSend)
+                .disabled(!canSend && !canQueue)
                 .animation(DSH.Motion.snap, value: canSend)
             }
         }

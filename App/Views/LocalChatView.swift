@@ -116,9 +116,9 @@ struct LocalChatView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 if isRunning {
-                    Button("停止") {
+                    Button("中断") {
                         Haptics.soft()
-                        local.stop()
+                        local.interrupt()
                     }
                     .font(.system(size: 13, weight: .semibold))
                 }
@@ -165,6 +165,9 @@ struct LocalChatView: View {
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
+                if !local.queue.isEmpty {
+                    queueStrip
+                }
                 if let error = local.error {
                     Text(error)
                         .font(.system(size: 12))
@@ -176,6 +179,36 @@ struct LocalChatView: View {
             }
             .background(Theme.ink.opacity(0.001))
         }
+    }
+
+    private var queueStrip: some View {
+        VStack(spacing: 6) {
+            ForEach(local.queue) { item in
+                HStack(spacing: 8) {
+                    Image(systemName: "text.queue")
+                        .font(.system(size: 11))
+                        .foregroundStyle(DSH.Palette.warning)
+                    Text(item.text)
+                        .font(.system(size: 12))
+                        .foregroundStyle(DSH.Palette.secondary)
+                        .lineLimit(1)
+                    Spacer()
+                    Button {
+                        local.removeQueued(item.id)
+                        Haptics.tap()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 13))
+                            .foregroundStyle(DSH.Palette.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(DSH.Palette.surface, in: Capsule())
+            }
+        }
+        .padding(.horizontal, 14)
     }
 
     private var exportText: String {
@@ -281,18 +314,32 @@ struct LocalChatView: View {
             onSend: {
                 let outgoing = draft
                 draft = ""
-                local.send(
+                local.submit(
                     outgoing,
                     in: sessionID,
                     model: config.model.isEmpty ? (session?.model ?? account.selectedModel) : config.model,
                     key: account.key,
                     tools: config.activeToolNames,
                     allowsWrite: config.allowsWrite,
-                    modeHint: config.mode.systemHint
+                    modeHint: config.mode.systemHint,
+                    sandboxMode: config.sandboxMode
                 )
             },
             onAttach: { showImporter = true },
             onModel: { showModelPicker = true },
+            onQueue: {
+                local.submit(
+                    draft,
+                    in: sessionID,
+                    model: config.model.isEmpty ? (session?.model ?? account.selectedModel) : config.model,
+                    key: account.key,
+                    tools: config.activeToolNames,
+                    allowsWrite: config.allowsWrite,
+                    modeHint: config.mode.systemHint,
+                    sandboxMode: config.sandboxMode
+                )
+                draft = ""
+            },
             focused: $composerFocused
         )
     }
@@ -301,14 +348,15 @@ struct LocalChatView: View {
         let text = draft
         draft = ""
         Haptics.soft()
-        local.send(
+        local.submit(
             text,
             in: sessionID,
             model: config.model.isEmpty ? (session?.model ?? account.selectedModel) : config.model,
             key: account.key,
             tools: config.activeToolNames,
             allowsWrite: config.allowsWrite,
-            modeHint: config.mode.systemHint
+            modeHint: config.mode.systemHint,
+            sandboxMode: config.sandboxMode
         )
     }
 }

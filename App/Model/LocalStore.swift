@@ -74,12 +74,24 @@ enum LocalStage: Identifiable, Equatable {
     }
 }
 
+struct QueuedPrompt: Identifiable {
+    let id = UUID()
+    var text: String
+    var model: String
+    var key: String
+    var tools: [String]
+    var allowsWrite: Bool
+    var modeHint: String?
+    var sandboxMode: SandboxMode
+}
+
 @MainActor
 final class LocalStore: ObservableObject {
     @Published private(set) var sessions: [LocalSession] = []
     @Published private(set) var runningID: UUID?
     @Published private(set) var stages: [LocalStage] = []
     @Published private(set) var trace: TurnTrace?
+    @Published private(set) var queue: [QueuedPrompt] = []
     @Published var error: String?
 
     private var task: Task<Void, Never>?
@@ -148,7 +160,8 @@ final class LocalStore: ObservableObject {
         key: String,
         tools: [String] = [],
         allowsWrite: Bool = true,
-        modeHint: String? = nil
+        modeHint: String? = nil,
+        sandboxMode: SandboxMode = .workspaceWrite
     ) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, runningID == nil else { return }
@@ -166,6 +179,7 @@ final class LocalStore: ObservableObject {
         persist()
 
         runningID = id
+        Sandbox.shared.configure(mode: sandboxMode)
         stages = [.thinking]
         trace = TurnTrace(startedAt: Date(), steps: [
             TraceStep(label: "思考", kind: .thinking, start: Date(), end: nil)
@@ -193,6 +207,64 @@ final class LocalStore: ObservableObject {
             }
             self.finishRun(id)
         }
+    }
+
+    /// 运行中就排队，空闲就直接发。
+    func submit(
+        _ text: String,
+        in id: UUID,
+        model: String,
+        key: String,
+        tools: [String] = [],
+        allowsWrite: Bool = true,
+        modeHint: String? = nil,
+        sandboxMode: SandboxMode = .workspaceWrite
+    ) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard runningID != nil else {
+            send(trimmed, in: id, model: model, key: key, tools: tools, allowsWrite: allowsWrite, modeHint: modeHint, sandboxMode: sandboxMode)
+            return
+        }
+        queue.append(
+            QueuedPrompt(text: trimmed, model: model, key: key, tools: tools, allowsWrite: allowsWrite, modeHint: modeHint, sandboxMode: sandboxMode)
+        )
+        Haptics.tap()
+    }
+
+    func removeQueued(_ id: UUID) {
+        queue.removeAll { $0.id == id }
+    }
+
+    func clearQueue() {
+        queue.removeAll()
+    }
+
+    /// 中断当前轮，然后继续队列。
+    func interrupt() {
+        task?.cancel()
+        task = nil
+        if let id = runningID {
+            stages.append(.failed("已中断"))
+            finishRun(id)
+        }
+        drainQueue()
+    }
+
+    private func drainQueue() {
+        guard runningID == nil, !queue.isEmpty else { return }
+        let next = queue.removeFirst()
+        guard let session = sessions.first(where: { !$0.messages.isEmpty }) ?? sessions.first else { return }
+        send(
+            next.text,
+            in: session.id,
+            model: next.model,
+            key: next.key,
+            tools: next.tools,
+            allowsWrite: next.allowsWrite,
+            modeHint: next.modeHint,
+            sandboxMode: next.sandboxMode
+        )
     }
 
     func stop() {
@@ -223,6 +295,9 @@ final class LocalStore: ObservableObject {
     private func finishRun(_ id: UUID) {
         closeOpenTraceSteps()
         runningID = nil
+        DispatchQueue.main.async { [weak self] in
+            self?.drainQueue()
+        }
         if let last = stages.last, last != .done {
             stages.append(.done)
         }

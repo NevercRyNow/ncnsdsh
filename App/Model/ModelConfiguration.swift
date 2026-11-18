@@ -68,6 +68,13 @@ enum PermissionProfile: String, CaseIterable, Identifiable {
         }
     }
 
+    var sandboxMode: SandboxMode {
+        switch permission {
+        case .readOnly: return .readOnly
+        case .workspace, .askBeforeChanges: return .workspaceWrite
+        }
+    }
+
     var allowsWrite: Bool { self != .readOnly }
 }
 
@@ -200,6 +207,13 @@ final class ModelConfigurationStore: ObservableObject {
         return enabledTools
             .filter(\.wiredToModel)
             .flatMap(\.toolNames)
+    }
+
+    var sandboxMode: SandboxMode {
+        switch permission {
+        case .readOnly: return .readOnly
+        case .workspace, .askBeforeChanges: return .workspaceWrite
+        }
     }
 
     var allowsWrite: Bool {

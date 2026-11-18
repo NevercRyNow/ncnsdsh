@@ -225,6 +225,35 @@ struct SettingsView: View {
                     infoLine("外观", settings.appearance.label)
                     infoLine("语言", settings.language.label)
                     infoLine("后台音频", settings.silentAudio ? "开" : "关")
+                    infoLine("沙箱模式", Sandbox.shared.policy.mode.title)
+                    infoLine("沙箱拒绝次数", "\(Sandbox.shared.denialCount)")
+
+                    if !Sandbox.shared.audit.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("最近的文件操作")
+                                .font(DSH.TypeScale.footnote)
+                                .foregroundStyle(DSH.Palette.tertiary)
+
+                            ForEach(Sandbox.shared.audit.suffix(8).reversed()) { entry in
+                                HStack(spacing: 8) {
+                                    Text(entry.tool)
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundStyle(DSH.Palette.secondary)
+                                        .frame(width: 96, alignment: .leading)
+                                    Text(entry.path)
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundStyle(DSH.Palette.tertiary)
+                                        .lineLimit(1)
+                                    Spacer()
+                                    Text(label(for: entry.outcome))
+                                        .font(.system(size: 9))
+                                        .foregroundStyle(tint(for: entry.outcome))
+                                }
+                            }
+                        }
+                        .padding(14)
+                        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
                 }
                 .padding(20)
             }
@@ -238,6 +267,20 @@ struct SettingsView: View {
             }
         }
         .preferredColorScheme(.dark)
+    }
+
+    private func label(for outcome: SandboxAuditEntry.Outcome) -> String {
+        switch outcome {
+        case .allowed: return "允许"
+        case .denied(let reason): return "拒绝 · " + reason
+        }
+    }
+
+    private func tint(for outcome: SandboxAuditEntry.Outcome) -> Color {
+        switch outcome {
+        case .allowed: return DSH.Palette.success
+        case .denied: return DSH.Palette.danger
+        }
     }
 
     private func infoLine(_ title: String, _ value: String) -> some View {

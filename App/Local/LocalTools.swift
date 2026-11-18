@@ -172,7 +172,7 @@ enum LocalTools {
             switch name {
             case "list_files":
                 let relative = args["path"] as? String ?? ""
-                let dir = try resolve(relative)
+                let dir = try Sandbox.shared.resolve(relative, write: false, tool: "list_files")
                 let items = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.isDirectoryKey])
                     .sorted { $0.lastPathComponent < $1.lastPathComponent }
                 if items.isEmpty { return "（空目录）" }
@@ -183,7 +183,7 @@ enum LocalTools {
 
             case "read_file":
                 guard let relative = args["path"] as? String else { return "错误：缺少 path" }
-                let url = try resolve(relative)
+                let url = try Sandbox.shared.resolve(relative, write: false, tool: "read_file")
                 let data = try Data(contentsOf: url)
                 let slice = data.prefix(20 * 1024)
                 return String(decoding: slice, as: UTF8.self)
@@ -195,7 +195,7 @@ enum LocalTools {
                 guard let relative = args["path"] as? String, let content = args["content"] as? String else {
                     return "错误：缺少 path 或 content"
                 }
-                let url = try resolve(relative)
+                let url = try Sandbox.shared.resolve(relative, write: true, tool: "write_file")
                 try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try Data(content.utf8).write(to: url, options: .atomic)
                 return "已写入 \(url.lastPathComponent)（\(content.utf8.count) 字节）"
@@ -283,7 +283,7 @@ enum LocalTools {
 
             case "image_analysis":
                 guard let relative = args["path"] as? String else { return "错误：缺少 path" }
-                let url = try resolve(relative)
+                let url = try Sandbox.shared.resolve(relative, write: false, tool: "image_analysis")
                 guard let image = UIImage(contentsOfFile: url.path), let cgImage = image.cgImage else {
                     return "错误：读不了这张图片"
                 }
@@ -305,13 +305,8 @@ enum LocalTools {
         }
     }
 
-    /// 只允许工作区内部的相对路径。
-    private static func resolve(_ relative: String) throws -> URL {
-        let base = workspace.standardizedFileURL
-        let candidate = base.appendingPathComponent(relative).standardizedFileURL
-        guard candidate.path == base.path || candidate.path.hasPrefix(base.path + "/") else {
-            throw NSError(domain: "NcnsDSH", code: 1, userInfo: [NSLocalizedDescriptionKey: "路径不在工作区里"])
-        }
-        return candidate
+    /// 所有文件操作都过沙箱：越界与只读在这里被拒绝，并记入审计。
+    static func resolve(_ relative: String, write: Bool = false) throws -> URL {
+        try Sandbox.shared.resolve(relative, write: write, tool: "resolve")
     }
 }
