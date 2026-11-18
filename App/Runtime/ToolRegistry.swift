@@ -33,7 +33,8 @@ enum ToolRegistry {
         ToolManifest(id: "notify", title: "通知", summary: "安排一条本地通知", runtime: .native, writes: false),
         ToolManifest(id: "speak", title: "朗读", summary: "用系统语音朗读文本", runtime: .native, writes: false),
         ToolManifest(id: "text_analysis", title: "文本分析", summary: "语言与命名实体", runtime: .native, writes: false),
-        ToolManifest(id: "image_analysis", title: "图片识别", summary: "识别图片里的文字", runtime: .native, writes: false)
+        ToolManifest(id: "image_analysis", title: "图片识别", summary: "识别图片里的文字", runtime: .native, writes: false),
+        ToolManifest(id: "run_javascript", title: "JavaScript", summary: "JavaScriptCore 执行片段（非 Node）", runtime: .native, writes: true)
     ]
 
     static func manifests(for names: [String]) -> [ToolManifest] {
