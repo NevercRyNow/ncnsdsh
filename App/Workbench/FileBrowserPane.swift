@@ -42,9 +42,6 @@ struct FileBrowserPane: View {
             }
         }
         .onAppear(perform: load)
-        .sheet(isPresented: $editing) {
-            FileEditorView(url: url)
-        }
         .onChange(of: directory) { _, _ in load() }
         .sheet(item: $preview) { url in
             FilePreview(url: url)

@@ -10,8 +10,28 @@ struct ModelIntelligenceDeck: View {
     @State private var query = ""
     @State private var scrollID: String?
     @State private var appeared = false
-    @State private var sweep = false
     @Namespace private var modeNamespace
+
+    /// 参考片（/tmp/ref.mp4，1180×2556，内层实际 30fps：相邻两帧常常完全相同）量出来的三个数：
+    /// 1. 入场：0.067s 列表还只有影子，0.100s 五行全出来，0.233s 稳定；
+    ///    期间整排字往上走了约 20px（面板高度的 4%），没有缩放、没有旋转、没有斜向扫光；
+    /// 2. 列表 → 胶囊的切换在 1.433s（列表最后一帧）到 1.567s（胶囊已成形）之间，
+    ///    中间只有一帧半透明过渡，连收敛一起 0.27s；
+    /// 3. 高光在条带顶部：紫条的逐行亮度 63 → 43（顶亮底暗），而同一帧面板底色的
+    ///    166 → 173（基本平），所以那是 UI 的顶部镜面（90°），不是屏幕反光；
+    ///    条带本身的颜色是 0° 横向渐变：#1B3D97 → #4E2D8D。
+    private enum Measured {
+        static let settle = Animation.spring(response: 0.32, dampingFraction: 0.82)
+        /// 参考片里没有级联，留 20ms 只是不让整排同一帧闪出来。
+        static let stagger = 0.02
+        static let enterScale: CGFloat = 0.97
+        /// 入场时整排往上滑的距离，按量到的 4% 面板高度取 5pt。
+        static let enterRise: CGFloat = 5
+        static let recedeScale: CGFloat = 0.94
+        static let recedeOpacity: Double = 0.85
+        static let accentLead = Color(red: 0.106, green: 0.239, blue: 0.592)  // #1B3D97
+        static let accentTrail = Color(red: 0.306, green: 0.176, blue: 0.553) // #4E2D8D
+    }
 
     private var models: [String] {
         let all = account.models.isEmpty ? ["deepseek-chat"] : account.models
@@ -46,8 +66,7 @@ struct ModelIntelligenceDeck: View {
                 }
             }
             .onAppear {
-                withAnimation(DSH.Motion.flow) { appeared = true }
-                withAnimation(.easeInOut(duration: 0.9).delay(0.15)) { sweep = true }
+                appeared = true
                 if account.models.isEmpty {
                     Task { await account.refreshModels() }
                 }
@@ -152,30 +171,44 @@ struct ModelIntelligenceDeck: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(selected ? DSH.Palette.raised : DSH.Palette.surface)
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(selected ? DSH.Palette.accent.opacity(0.8) : DSH.Palette.hairline, lineWidth: selected ? 1 : 0.5)
-            )
-            .overlay(
+            // 选中底纹：量出来的 0° 横向渐变（深蓝 → 紫），压低不透明度让白字仍然够亮。
+            .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [.clear, Color.white.opacity(0.22), .clear],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                            colors: [Measured.accentLead, Measured.accentTrail],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
                     )
-                    .offset(x: sweep ? 180 : -180)
-                    .blur(radius: 6)
-                    .mask(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .allowsHitTesting(false)
+                    .opacity(selected ? 0.55 : 0)
+            )
+            // 顶部镜面：沿上边缘一道 1pt 白线，往下淡出——这就是 90° 的那条高光。
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(selected ? 0.40 : 0.10),
+                                Color.white.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 0.8
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(selected ? DSH.Palette.accent.opacity(0.45) : DSH.Palette.hairline, lineWidth: 0.5)
             )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .scaleEffect(appeared ? (selected ? 1.0 : 0.965) : 0.82)
-            .opacity(appeared ? 1 : 0)
-            .rotation3DEffect(.degrees(appeared ? 0 : (index.isMultiple(of: 2) ? -8 : 8)), axis: (x: 0, y: 1, z: 0))
-            .animation(DSH.Motion.flow.delay(Double(index) * 0.035), value: appeared)
-            .animation(DSH.Motion.snap, value: selected)
+            // 选中形变：选中的留在原位，其余缩小 6%、压到 85% 透明度——参考片里是别的行直接收起。
+            .scaleEffect(appeared ? (selected ? 1.0 : Measured.recedeScale) : Measured.enterScale)
+            .offset(y: appeared ? 0 : Measured.enterRise)
+            .opacity(appeared ? (selected ? 1 : Measured.recedeOpacity) : 0)
+            .animation(Measured.settle.delay(Double(index) * Measured.stagger), value: appeared)
+            .animation(Measured.settle, value: selected)
         }
         .buttonStyle(.plain)
     }
