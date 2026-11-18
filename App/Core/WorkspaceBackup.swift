@@ -64,7 +64,7 @@ enum WorkspaceBackup {
         try? manager.removeItem(at: final)
         try manager.moveItem(at: staging, to: final)
         prune()
-        RuntimeLog.shared.log("工作区备份：\(files) 个文件 / \(bytes) 字节")
+        Task { @MainActor in RuntimeLog.shared.log("工作区备份：\(files) 个文件 / \(bytes) 字节") }
         return BackupInfo(id: final.lastPathComponent, url: final, date: Date(), files: files, bytes: bytes)
     }
 
@@ -86,7 +86,7 @@ enum WorkspaceBackup {
                 try manager.copyItem(at: item, to: workspace.appendingPathComponent(item.lastPathComponent))
             }
             try? manager.removeItem(at: aside)
-            RuntimeLog.shared.log("已从备份恢复：\(info.id)")
+            Task { @MainActor in RuntimeLog.shared.log("已从备份恢复：\(info.id)") }
         } catch {
             try? manager.removeItem(at: workspace)
             try? manager.moveItem(at: aside, to: workspace)
