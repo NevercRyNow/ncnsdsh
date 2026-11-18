@@ -268,8 +268,8 @@ struct LocalChatView: View {
                     key: account.key
                 )
             },
-            onModel: { showModelPicker = true },
             onAttach: { showImporter = true },
+            onModel: { showModelPicker = true },
             focused: $composerFocused
         )
     }
