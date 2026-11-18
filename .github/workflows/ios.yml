@@ -14,8 +14,9 @@ on:
 
 concurrency:
   group: ncnsdsh-ipa
-  # 新提交会取消上一次（不管在跑还是在排队）：旧提交的包没人要，留着只是占 runner。
-  cancel-in-progress: true
+  # 定时任务已经改成每天一次，不会再有排队堆积；这里保持 false——之前设成 true 时
+  # 观察到排队中的 job 会被清掉，分不清是并发策略还是 runner 容量，先排除前者。
+  cancel-in-progress: false
 
 permissions:
   contents: write
