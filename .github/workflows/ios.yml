@@ -3,8 +3,8 @@ name: Build NcnsDSH IPA
 on:
   workflow_dispatch:
   schedule:
-    # 每 30 分钟一次会和 push 抢同一个 concurrency 组，macOS runner 又排得很慢；
-    # 改成每天一次兜底，正常出包靠 push。
+    # 原先每 30 分钟一次，会和 push 一起把排队堆起来；改成每天一次兜底，
+    # 正常出包靠 push 和手动 dispatch。
     - cron: "0 3 * * *"
   push:
     paths:
@@ -12,11 +12,8 @@ on:
       - "project.yml"
       - ".github/workflows/ios.yml"
 
-concurrency:
-  group: ncnsdsh-ipa
-  # 定时任务已经改成每天一次，不会再有排队堆积；这里保持 false——之前设成 true 时
-  # 观察到排队中的 job 会被清掉，分不清是并发策略还是 runner 容量，先排除前者。
-  cancel-in-progress: false
+# 并发组整个去掉：定时任务已经每天一次，不存在堆积；而排队中的 job 反复被清，
+# 需要先排除 concurrency 这个变量，再判断是不是 runner 容量。
 
 permissions:
   contents: write
