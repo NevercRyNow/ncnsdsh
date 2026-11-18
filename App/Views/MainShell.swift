@@ -7,7 +7,8 @@ struct MainShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var expanded: UUID?
-    @State private var dragOffset: CGSize = .zero
+    @State private var dockOffset: CGSize = .zero
+    @GestureState private var dockDragging = false
     @Namespace private var miniNamespace
 
     private var liveSession: ChatSession? {
@@ -123,23 +124,32 @@ struct MainShell: View {
                 .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.55), radius: 18, y: 8)
-        .scaleEffect(dragOffset.height < 0 ? 1 + min(0.05, -dragOffset.height / 700) : 1)
-        .offset(y: dragOffset.height * 0.22)
+        .scaleEffect(dockDragging ? 1.03 : 1)
+        .rotationEffect(.degrees(dockOffset.width / 90), anchor: .center)
+        .offset(x: dockOffset.width, y: dockOffset.height)
         .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .onTapGesture {
-            expand(session)
-        }
+        .zIndex(3)
         .gesture(
-            DragGesture(minimumDistance: 8)
+            DragGesture(minimumDistance: 0)
+                .updating($dockDragging) { _, state, _ in
+                    state = true
+                }
                 .onChanged { value in
-                    dragOffset = value.translation
+                    // 跟手：不做缩放噪声，只做有边界的位移
+                    dockOffset = CGSize(
+                        width: min(140, max(-140, value.translation.width)),
+                        height: min(0, max(-260, value.translation.height))
+                    )
                 }
                 .onEnded { value in
-                    if value.translation.height < -28 {
+                    let distance = hypot(value.translation.width, value.translation.height)
+                    if distance < 10 {
+                        expand(session)
+                    } else if value.translation.height < -70 {
                         expand(session)
                     }
-                    withAnimation(.spring(response: 0.34, dampingFraction: 0.66)) {
-                        dragOffset = .zero
+                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
+                        dockOffset = .zero
                     }
                 }
         )
