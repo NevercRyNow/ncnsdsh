@@ -110,7 +110,7 @@ struct AboutView: View {
                 .padding(.top, 6)
 
             Text("面向 iOS 的原生智能开发工作站。把对话、工具执行、文件与运行环境放进同一个工作空间。")
-                .font(Fluid.Type.secondary)
+                .font(Fluid.Typography.secondary)
                 .foregroundStyle(Fluid.Palette.mist)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 12)
@@ -179,7 +179,7 @@ struct AboutView: View {
 
                 HStack {
                     Text("第三方依赖")
-                        .font(Fluid.Type.body)
+                        .font(Fluid.Typography.body)
                         .foregroundStyle(Fluid.Palette.text)
                     Spacer()
                     Text("无")
@@ -208,7 +208,7 @@ struct AboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("本工程没有引入任何第三方包：project.yml 里没有 package 声明，上面的框架全部来自系统。")
-                    .font(Fluid.Type.caption)
+                    .font(Fluid.Typography.caption)
                     .foregroundStyle(Fluid.Palette.mist)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 2)
@@ -258,7 +258,7 @@ struct AboutView: View {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 HStack {
                     Text(item.0)
-                        .font(Fluid.Type.body)
+                        .font(Fluid.Typography.body)
                         .foregroundStyle(Fluid.Palette.text)
                     Spacer()
                     Text(item.1)
@@ -277,7 +277,7 @@ struct AboutView: View {
     private func row(_ title: String, _ value: String, tint: Color, accessory: String? = nil) -> some View {
         HStack(spacing: 8) {
             Text(title)
-                .font(Fluid.Type.body)
+                .font(Fluid.Typography.body)
                 .foregroundStyle(Fluid.Palette.text)
             Spacer()
             Text(value)

@@ -56,7 +56,7 @@ enum Fluid {
     }
 
     /// 语义字号。全部走 Dynamic Type，技术内容用等宽数字。
-    enum Type {
+    enum Typography {
         static let display = Font.system(.largeTitle, design: .default).weight(.bold)
         static let section = Font.system(.caption, design: .default).weight(.semibold)
         static let body = Font.system(.body)
