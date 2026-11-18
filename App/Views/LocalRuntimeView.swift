@@ -6,7 +6,7 @@ struct LocalRuntimeView: View {
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var perf: PerformanceCenter
     @EnvironmentObject private var store: HostStore
-    @EnvironmentObject private var environment: EnvironmentManager
+    @EnvironmentObject private var environmentManager: EnvironmentManager
     @Environment(\.dismiss) private var dismiss
 
     @ObservedObject private var log = RuntimeLog.shared
@@ -58,7 +58,7 @@ struct LocalRuntimeView: View {
             Button("取消", role: .cancel) {}
         }
         .sheet(isPresented: $showLinux) {
-            LinuxServerSheet().environmentObject(store).environmentObject(environment)
+            LinuxServerSheet().environmentObject(store).environmentObject(environmentManager)
         }
         .confirmationDialog(
             pendingRemoval.map { "移除 \($0.displayName)？" } ?? "",
