@@ -301,7 +301,7 @@ struct SettingsView: View {
 
     /// 分区标题 + 内容。设置页按「通用 / 连接 / 能力 / 后台 / 小组件 / 关于」排，
     /// 不是把七组卡片平铺成一个长列表。
-    private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             sectionTitle(title)
             content()
