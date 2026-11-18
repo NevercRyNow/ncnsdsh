@@ -73,7 +73,6 @@ struct ModelIntelligenceDeck: View {
                 scrollID = config.model
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     // MARK: - Rail

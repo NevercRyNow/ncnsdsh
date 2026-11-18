@@ -75,7 +75,6 @@ struct EnvironmentView: View {
                 manager.sync(hosts: store.hosts, currentHost: store.current)
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private func card(_ profile: EnvironmentProfile) -> some View {

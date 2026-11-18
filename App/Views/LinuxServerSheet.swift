@@ -61,7 +61,6 @@ struct LinuxServerSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private func field(_ title: String, text: Binding<String>, placeholder: String) -> some View {

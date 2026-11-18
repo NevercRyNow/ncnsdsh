@@ -1,20 +1,39 @@
 import SwiftUI
+import UIKit
 
 /// Apple Music × Apple TV 方向的 token 层。新代码用它，旧代码里的 Theme 保持兼容。
+///
+/// 深色值与 2.16.x 完全一致，所以深色观感不变；浅色是新补的一套，不是把深色反相。
+/// 这两套值都走 UIColor 动态色，用户切换外观时整页立刻跟着变。
 enum DSH {
     enum Palette {
-        static let canvas = Color.black
-        static let surface = Color.white.opacity(0.06)
-        static let raised = Color.white.opacity(0.10)
-        static let hairline = Color.white.opacity(0.12)
-        static let accent = Color(red: 0.039, green: 0.518, blue: 1.0) // #0A84FF, Apple blue
-        static let text = Color.white.opacity(0.96)
-        static let secondary = Color.white.opacity(0.60)
-        static let tertiary = Color.white.opacity(0.36)
-        static let success = Color(red: 0.196, green: 0.843, blue: 0.294)
-        static let danger = Color(red: 1.0, green: 0.412, blue: 0.380)
-        static let warning = Color(red: 0.878, green: 0.569, blue: 0.227) // #E0913A
-        static let info = Color(red: 0.357, green: 0.553, blue: 0.937)
+        static let canvas = adaptive(dark: 0x0B0C0F, light: 0xF5F5F7)
+        static let surface = overlay(dark: 0.06, light: 0.04)
+        static let raised = overlay(dark: 0.10, light: 0.06)
+        static let hairline = overlay(dark: 0.12, light: 0.10)
+        static let accent = adaptive(dark: 0x0A84FF, light: 0x0A6CFF)
+        static let text = adaptive(dark: 0xF5F5F7, light: 0x14161A)
+        static let secondary = overlay(dark: 0.60, light: 0.62)
+        static let tertiary = overlay(dark: 0.36, light: 0.44)
+        static let success = adaptive(dark: 0x32D74B, light: 0x1B7A2F)
+        static let danger = adaptive(dark: 0xFF6A61, light: 0xC4271E)
+        static let warning = adaptive(dark: 0xE0913A, light: 0xA65D00)
+        static let info = adaptive(dark: 0x5B8DEF, light: 0x2857C4)
+
+        private static func adaptive(dark: UInt32, light: UInt32) -> Color {
+            Color(uiColor: UIColor { trait in
+                UIColor(rgb: trait.userInterfaceStyle == .dark ? dark : light)
+            })
+        }
+
+        /// 半透明层：深色用白、浅色用黑，和原来深色下的数值对齐。
+        private static func overlay(dark: Double, light: Double) -> Color {
+            Color(uiColor: UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(white: 1, alpha: dark)
+                    : UIColor(white: 0, alpha: light)
+            })
+        }
     }
 
     enum Radius {

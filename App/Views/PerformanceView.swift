@@ -27,7 +27,6 @@ struct PerformanceView: View {
             }
             .onAppear { perf.start() }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var metrics: some View {

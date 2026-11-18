@@ -44,7 +44,6 @@ struct AccountView: View {
                 if account.isSignedIn { await account.loadBalance() }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     // MARK: - Balance

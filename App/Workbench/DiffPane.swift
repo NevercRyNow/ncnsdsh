@@ -138,7 +138,6 @@ struct DiffPane: View {
                     }
                 }
         }
-        .preferredColorScheme(.dark)
     }
 
     private func prefix(_ op: DiffOp) -> String {

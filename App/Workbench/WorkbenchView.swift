@@ -42,7 +42,6 @@ struct WorkbenchView: View {
         .background(DSH.Palette.canvas.ignoresSafeArea())
         .navigationTitle("工作台")
         .navigationBarTitleDisplayMode(.large)
-        .preferredColorScheme(.dark)
     }
 
     private var header: some View {

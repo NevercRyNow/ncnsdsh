@@ -63,7 +63,7 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showWeb) {
             if let host = store.current {
-                WebScreen(host: host).preferredColorScheme(.dark)
+                WebScreen(host: host)
             }
         }
     }
@@ -266,7 +266,6 @@ struct SettingsView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private func label(for outcome: SandboxAuditEntry.Outcome) -> String {

@@ -67,7 +67,6 @@ struct BuildTutorialView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     private var intro: some View {

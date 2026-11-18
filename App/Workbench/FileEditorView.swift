@@ -53,7 +53,6 @@ struct FileEditorView: View {
             }
             .onAppear(perform: load)
         }
-        .preferredColorScheme(.dark)
     }
 
     private func load() {

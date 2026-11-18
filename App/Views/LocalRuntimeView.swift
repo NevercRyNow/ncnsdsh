@@ -56,7 +56,6 @@ struct LocalRuntimeView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
         .confirmationDialog("重置会清空日志、缓存与沙箱审计，不会删除工作区文件。", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("重置", role: .destructive) {
                 reset()

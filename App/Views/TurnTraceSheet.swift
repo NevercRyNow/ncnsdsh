@@ -19,7 +19,6 @@ struct TurnTraceSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
     }
 
     @ViewBuilder
