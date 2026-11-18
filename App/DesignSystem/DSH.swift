@@ -13,6 +13,8 @@ enum DSH {
         static let tertiary = Color.white.opacity(0.36)
         static let success = Color(red: 0.196, green: 0.843, blue: 0.294)
         static let danger = Color(red: 1.0, green: 0.412, blue: 0.380)
+        static let warning = Color(red: 0.878, green: 0.569, blue: 0.227) // #E0913A
+        static let info = Color(red: 0.357, green: 0.553, blue: 0.937)
     }
 
     enum Radius {

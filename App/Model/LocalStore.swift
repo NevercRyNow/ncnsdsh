@@ -1,10 +1,49 @@
 import Foundation
 
 /// 本机会话的存储与运行状态。数据落在 Application Support 的 JSON 里，重启还在。
+enum LocalStage: Identifiable, Equatable {
+    case thinking
+    case streaming
+    case tool(String)
+    case done
+    case failed(String)
+
+    var id: String {
+        switch self {
+        case .thinking: return "thinking"
+        case .streaming: return "streaming"
+        case .tool(let name): return "tool-" + name
+        case .done: return "done"
+        case .failed: return "failed"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .thinking: return "思考"
+        case .streaming: return "生成回复"
+        case .tool(let name): return "调用 \(name)"
+        case .done: return "完成"
+        case .failed: return "失败"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .thinking: return "brain"
+        case .streaming: return "text.alignleft"
+        case .tool: return "wrench.and.screwdriver"
+        case .done: return "checkmark.circle"
+        case .failed: return "exclamationmark.triangle"
+        }
+    }
+}
+
 @MainActor
 final class LocalStore: ObservableObject {
     @Published private(set) var sessions: [LocalSession] = []
     @Published private(set) var runningID: UUID?
+    @Published private(set) var stages: [LocalStage] = []
     @Published var error: String?
 
     private var task: Task<Void, Never>?
@@ -83,6 +122,7 @@ final class LocalStore: ObservableObject {
         persist()
 
         runningID = id
+        stages = [.thinking]
         error = nil
         pendingToolMessage = nil
 
@@ -95,6 +135,7 @@ final class LocalStore: ObservableObject {
                 }
             } catch {
                 self.error = error.localizedDescription
+                self.stages.append(.failed(error.localizedDescription))
             }
             self.finishRun(id)
         }
@@ -110,6 +151,9 @@ final class LocalStore: ObservableObject {
 
     private func finishRun(_ id: UUID) {
         runningID = nil
+        if let last = stages.last, last != .done {
+            stages.append(.done)
+        }
         if let index = sessions.firstIndex(where: { $0.id == id }) {
             sessions[index].updatedAt = Date()
         }
@@ -121,11 +165,13 @@ final class LocalStore: ObservableObject {
 
         switch event {
         case .delta(let piece):
+            if !stages.contains(.streaming) { stages.append(.streaming) }
             if let messageIndex = sessions[index].messages.firstIndex(where: { $0.id == placeholder }) {
                 sessions[index].messages[messageIndex].text += piece
             }
 
         case .toolStarted(let name, _):
+            stages.append(.tool(name))
             let message = LocalMessage(role: .tool, text: "", toolName: name)
             pendingToolMessage = message.id
             sessions[index].messages.append(message)
@@ -138,6 +184,7 @@ final class LocalStore: ObservableObject {
             pendingToolMessage = nil
 
         case .done:
+            stages.append(.done)
             if let messageIndex = sessions[index].messages.firstIndex(where: { $0.id == placeholder }),
                sessions[index].messages[messageIndex].text.isEmpty {
                 sessions[index].messages[messageIndex].text = "（模型没有返回内容）"

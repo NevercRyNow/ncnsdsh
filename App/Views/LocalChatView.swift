@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct LocalChatView: View {
     let sessionID: UUID
@@ -12,6 +13,8 @@ struct LocalChatView: View {
     @State private var showModelPicker = false
     @State private var showWorkbench = false
     @State private var pickedModel: String = ""
+    @State private var stagesExpanded = true
+    @State private var showExport = false
     @FocusState private var composerFocused: Bool
 
     private var session: LocalSession? { local.session(sessionID) }
@@ -22,6 +25,10 @@ struct LocalChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 18) {
+                    if !local.stages.isEmpty {
+                        activityCard
+                    }
+
                     if messages.isEmpty {
                         CodexIntro(model: pickedModel.isEmpty ? (session?.model ?? account.selectedModel) : pickedModel) {
                             showModelPicker = true
@@ -60,6 +67,32 @@ struct LocalChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        draft = ""
+                    } label: {
+                        Label("清空输入", systemImage: "xmark.circle")
+                    }
+                    Button {
+                        local.compress(sessionID)
+                        Haptics.success()
+                    } label: {
+                        Label("压缩上下文", systemImage: "arrow.down.right.and.arrow.up.left")
+                    }
+                    Button {
+                        UIPasteboard.general.string = exportText
+                        Haptics.success()
+                    } label: {
+                        Label("复制全文", systemImage: "doc.on.doc")
+                    }
+                    ShareLink(item: exportText) {
+                        Label("导出会话", systemImage: "square.and.arrow.up")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Haptics.tap()
@@ -104,6 +137,84 @@ struct LocalChatView: View {
                 composer
             }
             .background(Theme.ink.opacity(0.001))
+        }
+    }
+
+    private var exportText: String {
+        let title = session?.title ?? "本机会话"
+        let body = messages.map { message in
+            switch message.role {
+            case .user: return "你：" + message.text
+            case .assistant: return "NcnsDSH：" + message.text
+            case .tool: return "[工具 \(message.toolName ?? "")] " + message.text
+            case .system: return "[系统] " + message.text
+            }
+        }.joined(separator: "\n\n")
+        return "# \(title)\n\n" + body
+    }
+
+    private var activityCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(DSH.Motion.snap) { stagesExpanded.toggle() }
+            } label: {
+                HStack(spacing: 8) {
+                    if isRunning {
+                        ProgressView()
+                            .controlSize(.mini)
+                            .tint(DSH.Palette.accent)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(DSH.Palette.success)
+                    }
+
+                    Text("Agent 活动")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(DSH.Palette.secondary)
+
+                    Text("\(local.stages.count) 步")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(DSH.Palette.tertiary)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(DSH.Palette.tertiary)
+                        .rotationEffect(.degrees(stagesExpanded ? 0 : 180))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if stagesExpanded {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(local.stages) { stage in
+                        HStack(spacing: 8) {
+                            Image(systemName: stage.symbol)
+                                .font(.system(size: 10))
+                                .foregroundStyle(tint(for: stage))
+                                .frame(width: 14)
+                            Text(stage.label)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundStyle(DSH.Palette.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: DSH.Radius.card, style: .continuous))
+    }
+
+    private func tint(for stage: LocalStage) -> Color {
+        switch stage {
+        case .thinking: return DSH.Palette.tertiary
+        case .streaming: return DSH.Palette.accent
+        case .tool: return DSH.Palette.warning
+        case .done: return DSH.Palette.success
+        case .failed: return DSH.Palette.danger
         }
     }
 
