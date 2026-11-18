@@ -15,6 +15,7 @@ struct MoreView: View {
     @State private var showEnvironment = false
     @State private var showPerformance = false
     @State private var showAbout = false
+    @State private var showGallery = false
     @State private var showRuntime = false
 
     var body: some View {
@@ -49,6 +50,10 @@ struct MoreView: View {
                     divider
                     row(icon: "cpu", title: "本机运行时", value: "进程内") {
                         showRuntime = true
+                    }
+                    divider
+                    row(icon: "paintpalette", title: "设计系统", value: "") {
+                        showGallery = true
                     }
                     divider
                     row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) {
@@ -90,6 +95,9 @@ struct MoreView: View {
         }
         .sheet(isPresented: $showPerformance) {
             PerformanceView()
+        }
+        .sheet(isPresented: $showGallery) {
+            DesignGalleryView()
         }
         .sheet(isPresented: $showAbout) {
             AboutView()

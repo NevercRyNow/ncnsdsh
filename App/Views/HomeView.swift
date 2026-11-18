@@ -18,6 +18,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
                     header
+                    coreStrip
                     statusStrip
                     quickActions
                     currentSession
@@ -75,6 +76,41 @@ struct HomeView: View {
             .background(DSH.Palette.surface, in: Capsule())
             .onTapGesture { router.tab = .more }
         }
+    }
+
+    // MARK: - Intelligence Core
+
+    /// 六种状态的推导写在 `CoreState.derive`，这里只负责取数据。
+    private var coreState: CoreState {
+        CoreState.derive(demo: demo, remote: store.current != nil)
+    }
+
+    private var coreStrip: some View {
+        HStack(spacing: 12) {
+            IntelligenceCore(state: coreState, size: 36)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(coreState.phase.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Fluid.Palette.text)
+                Text(coreState.detail)
+                    .font(Fluid.Typography.caption)
+                    .foregroundStyle(Fluid.Palette.mist)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            if coreState.remote {
+                Image(systemName: "desktopcomputer")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Fluid.Palette.iceBlue)
+                    .accessibilityLabel("远程主机已连接")
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .fluidSurface()
     }
 
     private var workspaceLine: String {
