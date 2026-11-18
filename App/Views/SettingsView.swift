@@ -24,12 +24,12 @@ struct SettingsView: View {
             ScrollView {
                 VStack(spacing: 22) {
                     accountRow
-                    entryGroup
+                    section("通用") { appearanceGroup }
+                    section("连接") { hostGroup }
+                    section("能力") { entryGroup }
                     backgroundGroup
                     widgetGroup
-                    appearanceGroup
-                    hostGroup
-                    tailGroup
+                    section("关于") { tailGroup }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -203,7 +203,7 @@ struct SettingsView: View {
                 showAdvanced = true
             }
             divider
-            row(icon: "info.circle", title: "关于", value: "郑壹鸣") {
+            row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) {
                 showCredits = true
             }
         }
@@ -298,6 +298,15 @@ struct SettingsView: View {
     }
 
     // MARK: - Pieces
+
+    /// 分区标题 + 内容。设置页按「通用 / 连接 / 能力 / 后台 / 小组件 / 关于」排，
+    /// 不是把七组卡片平铺成一个长列表。
+    private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionTitle(title)
+            content()
+        }
+    }
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
