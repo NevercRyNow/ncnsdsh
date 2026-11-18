@@ -1,0 +1,54 @@
+name: Compile check (macos-15)
+
+# 只做编译验证，不出包、不挂 release。
+# macos-latest（Xcode 26）的 macOS runner 排队经常超过 15 分钟被清掉，
+# 这里用旧镜像先拿到「能不能编译」的信号；glassEffect 分支靠 compiler 条件自动跳过。
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ncnsdsh-validate
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project NcnsDSH.xcodeproj \
+            -scheme NcnsDSH \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            2>&1 | tee build.log
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validate-build-log
+          path: build.log
+          if-no-files-found: ignore
