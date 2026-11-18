@@ -14,7 +14,38 @@ struct DSHPlugin: Identifiable, Codable, Hashable {
     var permissions: [String]
 }
 
+enum PluginRisk: Int, Comparable {
+    case low = 0, medium = 1, high = 2
+
+    static func < (lhs: PluginRisk, rhs: PluginRisk) -> Bool { lhs.rawValue < rhs.rawValue }
+
+    var label: String {
+        switch self {
+        case .low: return "低风险"
+        case .medium: return "中风险"
+        case .high: return "高风险"
+        }
+    }
+}
+
 extension DSHPlugin {
+    /// 风险由声明的权限推导，不是随便贴标签。
+    var risk: PluginRisk {
+        let high: Set<String> = ["子进程", "账号", "会话"]
+        let medium: Set<String> = ["文件", "相机", "照片", "日历", "提醒事项", "剪贴板", "通知"]
+        if permissions.contains(where: { high.contains($0) }) { return .high }
+        if permissions.contains(where: { medium.contains($0) }) { return .medium }
+        return .low
+    }
+
+    var recommended: Bool {
+        ["dsh-drawai", "dsh-image", "dsh-mcp", "dsh-ocr", "dsh-mobile-gateway"].contains(id)
+    }
+
+    var glyph: String {
+        String(name.first ?? "·")
+    }
+
     static let catalog: [DSHPlugin] = [
         DSHPlugin(
             id: "dsh-mobile-gateway",
