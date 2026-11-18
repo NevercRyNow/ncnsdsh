@@ -15,6 +15,7 @@ struct MoreView: View {
     @State private var showEnvironment = false
     @State private var showPerformance = false
     @State private var showAbout = false
+    @State private var showRuntime = false
 
     var body: some View {
         ScrollView {
@@ -46,7 +47,11 @@ struct MoreView: View {
                         showPerformance = true
                     }
                     divider
-                    row(icon: "info.circle", title: "关于", value: "2.4.0") {
+                    row(icon: "cpu", title: "本机运行时", value: "进程内") {
+                        showRuntime = true
+                    }
+                    divider
+                    row(icon: "info.circle", title: "关于", value: "2.6.0") {
                         showAbout = true
                     }
                 }
@@ -88,6 +93,9 @@ struct MoreView: View {
         }
         .sheet(isPresented: $showAbout) {
             AboutView()
+        }
+        .sheet(isPresented: $showRuntime) {
+            LocalRuntimeView()
         }
     }
 

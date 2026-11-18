@@ -180,6 +180,7 @@ final class LocalStore: ObservableObject {
 
         runningID = id
         Sandbox.shared.configure(mode: sandboxMode)
+        RuntimeLog.shared.log("发送 → \(model) · 沙箱 \(sandboxMode.rawValue) · 工具 \(tools.count)")
         stages = [.thinking]
         trace = TurnTrace(startedAt: Date(), steps: [
             TraceStep(label: "思考", kind: .thinking, start: Date(), end: nil)
@@ -203,6 +204,7 @@ final class LocalStore: ObservableObject {
                 }
             } catch {
                 self.error = error.localizedDescription
+                RuntimeLog.shared.log("错误：\(error.localizedDescription)", level: .error)
                 self.stages.append(.failed(error.localizedDescription))
             }
             self.finishRun(id)
@@ -293,6 +295,7 @@ final class LocalStore: ObservableObject {
     }
 
     private func finishRun(_ id: UUID) {
+        RuntimeLog.shared.log("本轮结束")
         closeOpenTraceSteps()
         runningID = nil
         DispatchQueue.main.async { [weak self] in
@@ -328,6 +331,7 @@ final class LocalStore: ObservableObject {
             }
 
         case .toolStarted(let name, _):
+            RuntimeLog.shared.log("工具 \(name)")
             closeTraceStep(kind: .generation)
             trace?.steps.append(TraceStep(label: name, kind: .tool, start: Date(), end: nil))
             stages.append(.tool(name))

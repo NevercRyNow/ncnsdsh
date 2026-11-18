@@ -98,6 +98,11 @@ final class Sandbox {
 
     func record(tool: String, path: String, outcome: SandboxAuditEntry.Outcome) {
         audit.append(SandboxAuditEntry(date: Date(), tool: tool, path: path, outcome: outcome))
+        if case .denied(let reason) = outcome {
+            Task { @MainActor in
+                RuntimeLog.shared.log("沙箱拒绝 \(tool) \(path)（\(reason)）", level: .error)
+            }
+        }
         if audit.count > limit {
             audit.removeFirst(audit.count - limit)
         }
