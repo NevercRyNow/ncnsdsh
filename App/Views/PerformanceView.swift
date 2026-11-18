@@ -32,9 +32,9 @@ struct PerformanceView: View {
 
     private var metrics: some View {
         VStack(spacing: 0) {
-            bar("CPU", value: perf.cpuPercent, unit: "%", max: 100, tint: DSH.Palette.accent, detail: "进程内所有线程合计")
+            bar("CPU", value: perf.cpuPercent, unit: "%", upper: 100, tint: DSH.Palette.accent, detail: "进程内所有线程合计")
             divider
-            bar("内存", value: perf.memoryMB, unit: "MB", max: 1024, tint: DSH.Palette.info, detail: "phys_footprint")
+            bar("内存", value: perf.memoryMB, unit: "MB", upper: 1024, tint: DSH.Palette.info, detail: "phys_footprint")
             divider
             row("热状态", perf.thermalLabel, tint: thermalTint)
             divider
@@ -81,7 +81,7 @@ struct PerformanceView: View {
             .padding(.leading, 16)
     }
 
-    private func bar(_ title: String, value: Double, unit: String, max: Double, tint: Color, detail: String) -> some View {
+    private func bar(_ title: String, value: Double, unit: String, upper: Double, tint: Color, detail: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title)
@@ -98,7 +98,7 @@ struct PerformanceView: View {
                     Capsule().fill(DSH.Palette.raised)
                     Capsule()
                         .fill(tint)
-                        .frame(width: max(2, proxy.size.width * min(1, value / max)))
+                        .frame(width: Swift.max(2, proxy.size.width * Swift.min(1, value / upper)))
                 }
             }
             .frame(height: 4)
