@@ -86,7 +86,7 @@ struct WorkspaceDetailView: View {
         } else {
             VStack(spacing: 0) {
                 ForEach(sessions) { session in
-                    NavigationLink(value: HomeRoute.remote(session.id)) {
+                    NavigationLink(value: Route.session(session.id)) {
                         row(session)
                     }
                     .buttonStyle(.plain)

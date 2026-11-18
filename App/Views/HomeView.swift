@@ -59,13 +59,8 @@ struct HomeView: View {
                 }
             }
             .background(DSH.Palette.canvas)
-            .navigationDestination(for: HomeRoute.self) { route in
-                switch route {
-                case .remote(let id):
-                    ChatView(sessionID: id)
-                case .local(let id):
-                    LocalChatView(sessionID: id)
-                }
+            .navigationDestination(for: Route.self) { route in
+                RouteDestination(route: route)
             }
             .sheet(isPresented: $showAccount) {
                 AccountView()
@@ -116,7 +111,7 @@ struct HomeView: View {
                     if account.isSignedIn {
                         Button {
                             let id = local.createSession(model: account.selectedModel)
-                            router.path.append(.local(id))
+                            router.path.append(.localSession(id))
                         } label: {
                             Label("本机会话", systemImage: "cpu")
                         }
@@ -131,7 +126,7 @@ struct HomeView: View {
                     Button {
                         demo.newSession()
                         if let id = demo.activeSessionID {
-                            router.path.append(.remote(id))
+                            router.path.append(.session(id))
                         }
                     } label: {
                         Label("演示会话", systemImage: "sparkles")
@@ -189,7 +184,7 @@ struct HomeView: View {
                 HStack(spacing: 10) {
                     Button("继续") {
                         Haptics.soft()
-                        router.path.append(.remote(session.id))
+                        router.path.append(.session(session.id))
                     }
                     .buttonStyle(.ncnsProminent)
 
@@ -197,7 +192,7 @@ struct HomeView: View {
                         Haptics.soft()
                         demo.newSession()
                         if let id = demo.activeSessionID {
-                            router.path.append(.remote(id))
+                            router.path.append(.session(id))
                         }
                     }
                     .buttonStyle(.ncnsGlass)
@@ -224,7 +219,7 @@ struct HomeView: View {
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 12) {
                     ForEach(demo.continueSessions) { session in
-                        NavigationLink(value: HomeRoute.remote(session.id)) {
+                        NavigationLink(value: Route.session(session.id)) {
                             continueCard(session)
                         }
                         .buttonStyle(CardPressStyle())
@@ -324,7 +319,7 @@ struct HomeView: View {
 
             VStack(spacing: 0) {
                 ForEach(Array(demo.sessions.dropFirst(2).prefix(4))) { session in
-                    NavigationLink(value: HomeRoute.remote(session.id)) {
+                    NavigationLink(value: Route.session(session.id)) {
                         HStack(spacing: 12) {
                             RemoteArtwork(seed: session.title, github: ProjectMeta.githubSlug(for: session.workspace), cornerRadius: 10)
                                 .frame(width: 46, height: 46)
@@ -397,7 +392,7 @@ struct HomeView: View {
                     Haptics.soft()
                     if account.isSignedIn {
                         let id = local.createSession(model: account.selectedModel)
-                        router.path.append(.local(id))
+                        router.path.append(.localSession(id))
                     } else {
                         showAccount = true
                     }
@@ -448,14 +443,14 @@ struct HomeView: View {
                 HStack(spacing: 10) {
                     Button("继续") {
                         Haptics.soft()
-                        router.path.append(.local(session.id))
+                        router.path.append(.localSession(session.id))
                     }
                     .buttonStyle(.ncnsProminent)
 
                     Button("新会话") {
                         Haptics.soft()
                         let id = local.createSession(model: account.selectedModel)
-                        router.path.append(.local(id))
+                        router.path.append(.localSession(id))
                     }
                     .buttonStyle(.ncnsGlass)
                 }
@@ -488,7 +483,7 @@ struct HomeView: View {
                 if account.isSignedIn {
                     Button("新建") {
                         let id = local.createSession(model: account.selectedModel)
-                        router.path.append(.local(id))
+                        router.path.append(.localSession(id))
                     }
                     .buttonStyle(NcnsGlassButtonStyle(compact: true))
                 } else {
@@ -504,7 +499,7 @@ struct HomeView: View {
             } else {
                 VStack(spacing: 0) {
                     ForEach(local.recent.prefix(3)) { session in
-                        NavigationLink(value: HomeRoute.local(session.id)) {
+                        NavigationLink(value: Route.localSession(session.id)) {
                             HStack(spacing: 12) {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                                     .fill(Theme.artwork(session.title.count))

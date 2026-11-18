@@ -9,14 +9,6 @@ struct MainShell: View {
     @State private var expanded: UUID?
     @Namespace private var miniNamespace
 
-    enum Tab: Hashable {
-        case home
-        case build
-        case plugins
-        case workspaces
-        case settings
-    }
-
     private var liveSession: ChatSession? {
         demo.sessions.first { $0.isRunning }
     }
@@ -32,25 +24,11 @@ struct MainShell: View {
     private var phoneShell: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $router.tab) {
-                HomeView()
-                    .tabItem { Label("会话", systemImage: "play.rectangle.on.rectangle") }
-                    .tag(Tab.home)
-
-                BuildView()
-                    .tabItem { Label("构建", systemImage: "hammer") }
-                    .tag(Tab.build)
-
-                WorkspacesView()
-                    .tabItem { Label("工作区", systemImage: "square.grid.2x2") }
-                    .tag(Tab.workspaces)
-
-                PluginsView()
-                    .tabItem { Label("插件", systemImage: "puzzlepiece.extension") }
-                    .tag(Tab.plugins)
-
-                SettingsView()
-                    .tabItem { Label("设置", systemImage: "gearshape") }
-                    .tag(Tab.settings)
+                tab(.home) { HomeView() }
+                tab(.projects) { WorkspacesView() }
+                tab(.sessions) { stacked { SessionsListView() } }
+                tab(.workbench) { stacked { WorkbenchView(sessionID: nil) } }
+                tab(.more) { stacked { MoreView() } }
             }
             .tint(DSH.Palette.accent)
             .sensoryFeedback(.selection, trigger: router.tab)
@@ -65,11 +43,13 @@ struct MainShell: View {
                             collapseButton
                         }
                 } else {
-                    miniBar(session)
-                        .matchedGeometryEffect(id: "liveSession", in: miniNamespace)
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, 58)
-                        .zIndex(1)
+                    GlassGroup(spacing: 10) {
+                        miniBar(session)
+                    }
+                    .matchedGeometryEffect(id: "liveSession", in: miniNamespace)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 58)
+                    .zIndex(1)
                 }
             }
         }
@@ -77,9 +57,26 @@ struct MainShell: View {
         .background(DSH.Palette.canvas.ignoresSafeArea())
         .onChange(of: router.tab) { _, _ in
             chrome.chatOpen = false
+            router.path = []
         }
         .onChange(of: demo.sessions.first(where: { $0.isRunning })?.id) { _, id in
             if id == nil { expanded = nil }
+        }
+    }
+
+    private func tab<Content: View>(_ value: AppTab, @ViewBuilder content: () -> Content) -> some View {
+        content()
+            .tabItem { Label(value.title, systemImage: value.symbol) }
+            .tag(value)
+    }
+
+    /// 给自带导航栈的页面（首页、项目）之外的 Tab 提供栈与路由。
+    private func stacked<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        NavigationStack(path: $router.path) {
+            content()
+                .navigationDestination(for: Route.self) { route in
+                    RouteDestination(route: route)
+                }
         }
     }
 
@@ -119,7 +116,7 @@ struct MainShell: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.regularMaterial, in: Capsule())
+            .ncnsPill()
             .overlay(Capsule().strokeBorder(DSH.Palette.hairline, lineWidth: 0.5))
             .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
         }

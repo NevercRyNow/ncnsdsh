@@ -14,7 +14,7 @@ struct WorkspacesView: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 18) {
                     ForEach(demo.workspaces) { workspace in
-                        NavigationLink(value: workspace.id) {
+                        NavigationLink(value: Route.project(workspace.id)) {
                             card(workspace)
                         }
                         .buttonStyle(.plain)
@@ -28,18 +28,8 @@ struct WorkspacesView: View {
             .background(Theme.ink.ignoresSafeArea())
             .navigationTitle("工作区")
             .navigationBarTitleDisplayMode(.large)
-            .navigationDestination(for: UUID.self) { id in
-                if let workspace = demo.workspaces.first(where: { $0.id == id }) {
-                    WorkspaceDetailView(workspace: workspace)
-                }
-            }
-            .navigationDestination(for: HomeRoute.self) { route in
-                switch route {
-                case .remote(let id):
-                    ChatView(sessionID: id)
-                case .local(let id):
-                    LocalChatView(sessionID: id)
-                }
+            .navigationDestination(for: Route.self) { route in
+                RouteDestination(route: route)
             }
         }
     }

@@ -43,6 +43,10 @@ struct RootView: View {
                     return
                 }
             }
+            if let route = Route.from(url) {
+                router.open(route)
+                return
+            }
             if let target = NcnsIntentTarget.from(url) {
                 router.handle(target, demo: demo)
             }

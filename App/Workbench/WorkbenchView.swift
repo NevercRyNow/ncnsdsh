@@ -40,6 +40,8 @@ struct WorkbenchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(DSH.Palette.canvas.ignoresSafeArea())
+        .navigationTitle("工作台")
+        .navigationBarTitleDisplayMode(.large)
         .preferredColorScheme(.dark)
     }
 
