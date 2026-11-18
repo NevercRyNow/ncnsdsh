@@ -32,7 +32,7 @@ struct WorkbenchView: View {
                 case .browser:
                     BrowserPane()
                 case .changes:
-                    FileBrowserPane(sortByDate: true, title: "最近改动")
+                    DiffPane()
                 case .context:
                     ContextPane(sessionID: sessionID)
                 }
