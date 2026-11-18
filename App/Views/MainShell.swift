@@ -135,17 +135,17 @@ struct MainShell: View {
                     state = true
                 }
                 .onChanged { value in
-                    // 跟手：不做缩放噪声，只做有边界的位移
+                    // 跟手 + 橡皮筋：超过范围后按 1/3 缓动，不会硬停
                     dockOffset = CGSize(
-                        width: min(140, max(-140, value.translation.width)),
-                        height: min(0, max(-260, value.translation.height))
+                        width: rubber(value.translation.width, limit: 110),
+                        height: rubber(min(0, value.translation.height), limit: 72)
                     )
                 }
                 .onEnded { value in
                     let distance = hypot(value.translation.width, value.translation.height)
                     if distance < 10 {
                         expand(session)
-                    } else if value.translation.height < -70 {
+                    } else if value.translation.height < -52 {
                         expand(session)
                     }
                     withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
@@ -153,6 +153,14 @@ struct MainShell: View {
                     }
                 }
         )
+    }
+
+    /// 超出限制后按 1/3 阻尼拉伸，松手回弹。
+    private func rubber(_ value: CGFloat, limit: CGFloat) -> CGFloat {
+        let magnitude = abs(value)
+        guard magnitude > limit else { return value }
+        let stretched = limit + (magnitude - limit) / 3
+        return value < 0 ? -stretched : stretched
     }
 
     private func expand(_ session: ChatSession) {
