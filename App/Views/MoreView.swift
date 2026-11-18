@@ -51,7 +51,7 @@ struct MoreView: View {
                         showRuntime = true
                     }
                     divider
-                    row(icon: "info.circle", title: "关于", value: "2.6.0") {
+                    row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) {
                         showAbout = true
                     }
                 }
