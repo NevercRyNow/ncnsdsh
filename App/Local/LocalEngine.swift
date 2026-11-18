@@ -2,6 +2,7 @@ import Foundation
 
 enum LocalEvent {
     case delta(String)
+    case usage(prompt: Int, completion: Int, cacheHit: Int)
     case toolStarted(name: String, arguments: String)
     case toolFinished(name: String, output: String)
     case done
@@ -159,6 +160,14 @@ final class LocalEngine {
                   let chunk = try? JSONDecoder().decode(Chunk.self, from: data)
             else { continue }
 
+            if let usage = chunk.usage {
+                continuation.yield(.usage(
+                    prompt: usage.prompt_tokens ?? 0,
+                    completion: usage.completion_tokens ?? 0,
+                    cacheHit: usage.prompt_cache_hit_tokens ?? 0
+                ))
+            }
+
             for choice in chunk.choices {
                 if let piece = choice.delta?.content, !piece.isEmpty {
                     text += piece
@@ -241,5 +250,12 @@ final class LocalEngine {
             let finish_reason: String?
         }
         let choices: [Choice]
+        let usage: Usage?
+    }
+
+    private struct Usage: Decodable {
+        let prompt_tokens: Int?
+        let completion_tokens: Int?
+        let prompt_cache_hit_tokens: Int?
     }
 }

@@ -18,6 +18,7 @@ struct LocalChatView: View {
     @State private var stagesExpanded = true
     @State private var showExport = false
     @State private var showImporter = false
+    @State private var showTrace = false
     @FocusState private var composerFocused: Bool
 
     private var session: LocalSession? { local.session(sessionID) }
@@ -70,6 +71,15 @@ struct LocalChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Haptics.tap()
+                    showTrace = true
+                } label: {
+                    Image(systemName: "chart.bar.xaxis")
+                }
+                .disabled(local.trace == nil)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button {
@@ -124,6 +134,9 @@ struct LocalChatView: View {
         .onDisappear { chrome.chatOpen = false }
         .sheet(isPresented: $showWorkbench) {
             WorkbenchView(sessionID: sessionID)
+        }
+        .sheet(isPresented: $showTrace) {
+            TurnTraceSheet()
         }
         .sheet(isPresented: $showModelPicker) {
             ModelIntelligenceDeck()

@@ -7,6 +7,7 @@ struct EnvironmentView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showConnect = false
+    @State private var showLinux = false
 
     var body: some View {
         NavigationStack {
@@ -15,6 +16,19 @@ struct EnvironmentView: View {
                     ForEach(manager.profiles) { profile in
                         card(profile)
                     }
+
+                    Button {
+                        Haptics.tap()
+                        showLinux = true
+                    } label: {
+                        Label("添加 Linux 服务器", systemImage: "server.rack")
+                            .font(.system(size: 14, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .foregroundStyle(DSH.Palette.text)
+                    }
+                    .buttonStyle(.plain)
 
                     Button {
                         Haptics.tap()
@@ -29,7 +43,7 @@ struct EnvironmentView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text("切环境不会清空会话。远端环境要先用 `dsh web` 起一个带 token 的网关，再扫码配对。")
+                    Text("iOS 不能在手机里跑 Linux：这里的 Linux 环境是远端服务器。在服务器上运行 `dsh web --host 0.0.0.0`，把地址和 token 填进来即可。切环境不会清空会话。")
                         .font(DSH.TypeScale.footnote)
                         .foregroundStyle(DSH.Palette.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -50,6 +64,9 @@ struct EnvironmentView: View {
             }
             .sheet(isPresented: $showConnect) {
                 ConnectView().environmentObject(store)
+            }
+            .sheet(isPresented: $showLinux) {
+                LinuxServerSheet().environmentObject(store).environmentObject(manager)
             }
             .onAppear {
                 manager.sync(hosts: store.hosts, currentHost: store.current)

@@ -3,6 +3,7 @@ import SwiftUI
 enum EnvironmentType: String, CaseIterable, Identifiable {
     case iPhone
     case remoteDSH
+    case linux
     case server
 
     var id: String { rawValue }
@@ -11,6 +12,7 @@ enum EnvironmentType: String, CaseIterable, Identifiable {
         switch self {
         case .iPhone: return "这台 iPhone"
         case .remoteDSH: return "电脑上的 DSH"
+        case .linux: return "Linux 服务器"
         case .server: return "服务器"
         }
     }
@@ -19,6 +21,7 @@ enum EnvironmentType: String, CaseIterable, Identifiable {
         switch self {
         case .iPhone: return "iphone"
         case .remoteDSH: return "desktopcomputer"
+        case .linux: return "server.rack"
         case .server: return "server.rack"
         }
     }
@@ -27,6 +30,7 @@ enum EnvironmentType: String, CaseIterable, Identifiable {
         switch self {
         case .iPhone: return "本机运行，模型直连，工具在沙盒里"
         case .remoteDSH: return "通过 dsh web 连接，完整运行时"
+        case .linux: return "远程 Linux：完整 DSH、终端与长任务"
         case .server: return "长任务与自动化，暂未接入"
         }
     }
@@ -104,7 +108,7 @@ final class EnvironmentManager: ObservableObject {
             list.append(
                 EnvironmentProfile(
                     id: host.id,
-                    type: .remoteDSH,
+                    type: host.kind == .linux ? .linux : .remoteDSH,
                     name: host.displayName,
                     workspace: host.originText,
                     runtimeVersion: "未探测",
@@ -132,7 +136,7 @@ final class EnvironmentManager: ObservableObject {
         switch profile.type {
         case .iPhone:
             return .online
-        case .remoteDSH:
+        case .remoteDSH, .linux:
             guard let hostID = profile.hostID, let host = hosts.first(where: { $0.id == hostID }) else {
                 return .offline
             }

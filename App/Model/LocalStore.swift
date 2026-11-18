@@ -1,6 +1,41 @@
 import Foundation
 
 /// 本机会话的存储与运行状态。数据落在 Application Support 的 JSON 里，重启还在。
+enum TraceKind {
+    case thinking
+    case generation
+    case tool
+}
+
+struct TraceStep: Identifiable {
+    let id = UUID()
+    var label: String
+    var kind: TraceKind
+    var start: Date
+    var end: Date?
+
+    var duration: TimeInterval { (end ?? Date()).timeIntervalSince(start) }
+}
+
+struct TurnTrace {
+    var startedAt: Date
+    var steps: [TraceStep] = []
+    var promptTokens = 0
+    var completionTokens = 0
+    var cacheHit = 0
+    var firstTokenAt: Date?
+
+    var elapsed: TimeInterval { Date().timeIntervalSince(startedAt) }
+
+    var modelTime: TimeInterval {
+        steps.filter { $0.kind != .tool }.reduce(0) { $0 + $1.duration }
+    }
+
+    var toolTime: TimeInterval {
+        steps.filter { $0.kind == .tool }.reduce(0) { $0 + $1.duration }
+    }
+}
+
 enum LocalStage: Identifiable, Equatable {
     case thinking
     case streaming
@@ -44,6 +79,7 @@ final class LocalStore: ObservableObject {
     @Published private(set) var sessions: [LocalSession] = []
     @Published private(set) var runningID: UUID?
     @Published private(set) var stages: [LocalStage] = []
+    @Published private(set) var trace: TurnTrace?
     @Published var error: String?
 
     private var task: Task<Void, Never>?
@@ -131,6 +167,9 @@ final class LocalStore: ObservableObject {
 
         runningID = id
         stages = [.thinking]
+        trace = TurnTrace(startedAt: Date(), steps: [
+            TraceStep(label: "思考", kind: .thinking, start: Date(), end: nil)
+        ])
         error = nil
         pendingToolMessage = nil
 
@@ -164,7 +203,25 @@ final class LocalStore: ObservableObject {
         }
     }
 
+    private func closeTraceStep(kind: TraceKind) {
+        guard var trace else { return }
+        if let index = trace.steps.lastIndex(where: { $0.kind == kind && $0.end == nil }) {
+            trace.steps[index].end = Date()
+            self.trace = trace
+        }
+    }
+
+    private func closeOpenTraceSteps() {
+        guard var trace else { return }
+        let now = Date()
+        for index in trace.steps.indices where trace.steps[index].end == nil {
+            trace.steps[index].end = now
+        }
+        self.trace = trace
+    }
+
     private func finishRun(_ id: UUID) {
+        closeOpenTraceSteps()
         runningID = nil
         if let last = stages.last, last != .done {
             stages.append(.done)
@@ -179,19 +236,32 @@ final class LocalStore: ObservableObject {
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
 
         switch event {
+        case .usage(let prompt, let completion, let cacheHit):
+            trace?.promptTokens = prompt
+            trace?.completionTokens = completion
+            trace?.cacheHit = cacheHit
+
         case .delta(let piece):
+            if trace?.firstTokenAt == nil {
+                trace?.firstTokenAt = Date()
+                closeTraceStep(kind: .thinking)
+                trace?.steps.append(TraceStep(label: "生成回复", kind: .generation, start: Date(), end: nil))
+            }
             if !stages.contains(.streaming) { stages.append(.streaming) }
             if let messageIndex = sessions[index].messages.firstIndex(where: { $0.id == placeholder }) {
                 sessions[index].messages[messageIndex].text += piece
             }
 
         case .toolStarted(let name, _):
+            closeTraceStep(kind: .generation)
+            trace?.steps.append(TraceStep(label: name, kind: .tool, start: Date(), end: nil))
             stages.append(.tool(name))
             let message = LocalMessage(role: .tool, text: "", toolName: name)
             pendingToolMessage = message.id
             sessions[index].messages.append(message)
 
         case .toolFinished(_, let output):
+            closeTraceStep(kind: .tool)
             if let pending = pendingToolMessage,
                let messageIndex = sessions[index].messages.firstIndex(where: { $0.id == pending }) {
                 sessions[index].messages[messageIndex].text = output
@@ -199,6 +269,7 @@ final class LocalStore: ObservableObject {
             pendingToolMessage = nil
 
         case .done:
+            closeOpenTraceSteps()
             stages.append(.done)
             if let messageIndex = sessions[index].messages.firstIndex(where: { $0.id == placeholder }),
                sessions[index].messages[messageIndex].text.isEmpty {

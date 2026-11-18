@@ -47,7 +47,7 @@ struct SettingsView: View {
             PhoneLoginView().environmentObject(phone)
         }
         .sheet(isPresented: $showCredits) {
-            CreditsView()
+            AboutView()
         }
         .sheet(isPresented: $showConnect) {
             ConnectView().environmentObject(store)

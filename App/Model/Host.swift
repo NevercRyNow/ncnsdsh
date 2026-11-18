@@ -2,11 +2,18 @@ import Foundation
 
 /// One DSH host the app can open. `baseURL` is the origin the `dsh web`
 /// server printed (minus the `?token=` query); `token` is the launch token.
+enum HostKind: String, Codable {
+    case mac
+    case linux
+}
+
 struct Host: Identifiable, Codable, Hashable {
     var id: UUID
     var name: String
     var baseURL: URL
     var token: String
+    /// 旧版本没有这个字段，可选保证解码不失败。
+    var kind: HostKind? = nil
 
     var webURL: URL {
         guard !token.isEmpty else { return baseURL }

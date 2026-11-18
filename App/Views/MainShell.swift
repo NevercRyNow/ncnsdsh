@@ -7,6 +7,7 @@ struct MainShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var expanded: UUID?
+    @State private var dragOffset: CGSize = .zero
     @Namespace private var miniNamespace
 
     private var liveSession: ChatSession? {
@@ -83,44 +84,72 @@ struct MainShell: View {
     // MARK: - Mini bar
 
     private func miniBar(_ session: ChatSession) -> some View {
-        Button {
-            Haptics.soft()
-            withAnimation(DSH.Motion.flow) {
-                expanded = session.id
+        HStack(spacing: 10) {
+            Image(systemName: "cpu")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DSH.Palette.accent)
+                .frame(width: 32, height: 32)
+                .background(DSH.Palette.accent.opacity(0.16), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(session.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(DSH.Palette.text)
+                    .lineLimit(1)
+                Text("正在工作 · \(Int(session.progress * 100))%")
+                    .font(.system(size: 10))
+                    .foregroundStyle(DSH.Palette.secondary)
+                    .lineLimit(1)
             }
-        } label: {
-            HStack(spacing: 10) {
-                RemoteArtwork(seed: session.title, github: ProjectMeta.githubSlug(for: session.workspace), cornerRadius: 6)
-                    .frame(width: 32, height: 32)
 
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(session.title)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(DSH.Palette.text)
-                        .lineLimit(1)
-                    Text("正在工作 · \(Int(session.progress * 100))%")
-                        .font(.caption2)
-                        .foregroundStyle(DSH.Palette.secondary)
-                        .lineLimit(1)
-                }
+            Spacer(minLength: 8)
 
-                Spacer(minLength: 8)
+            Circle()
+                .fill(DSH.Palette.accent)
+                .frame(width: 6, height: 6)
 
-                Circle()
-                    .fill(DSH.Palette.accent)
-                    .frame(width: 7, height: 7)
-
-                Image(systemName: "chevron.up")
-                    .font(.caption2.bold())
-                    .foregroundStyle(DSH.Palette.tertiary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .ncnsPill()
-            .overlay(Capsule().strokeBorder(DSH.Palette.hairline, lineWidth: 0.5))
-            .shadow(color: .black.opacity(0.4), radius: 18, y: 8)
+            Image(systemName: "chevron.up")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(DSH.Palette.tertiary)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 12)
+        .frame(height: 52)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color(white: 0.075).opacity(0.96))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.55), radius: 18, y: 8)
+        .scaleEffect(dragOffset.height < 0 ? 1 + min(0.05, -dragOffset.height / 700) : 1)
+        .offset(y: dragOffset.height * 0.22)
+        .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .onTapGesture {
+            expand(session)
+        }
+        .gesture(
+            DragGesture(minimumDistance: 8)
+                .onChanged { value in
+                    dragOffset = value.translation
+                }
+                .onEnded { value in
+                    if value.translation.height < -28 {
+                        expand(session)
+                    }
+                    withAnimation(.spring(response: 0.34, dampingFraction: 0.66)) {
+                        dragOffset = .zero
+                    }
+                }
+        )
+    }
+
+    private func expand(_ session: ChatSession) {
+        Haptics.soft()
+        withAnimation(DSH.Motion.flow) {
+            expanded = session.id
+        }
     }
 
     private var collapseButton: some View {

@@ -17,13 +17,14 @@ final class HostStore: ObservableObject {
 
     /// Saves and opens a host. `address` may carry `?token=…`; an explicit
     /// token argument wins when it is not empty.
-    func connect(address: String, token: String) {
+    func connect(address: String, token: String, kind: HostKind? = nil) {
         guard var host = HostParser.parse(address) else {
             lastError = "地址不对。示例：192.168.1.8:3080 或 http://mac.local:3080"
             Haptics.failure()
             return
         }
 
+        if let kind { host.kind = kind }
         let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
             host.token = trimmed
