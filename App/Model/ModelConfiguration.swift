@@ -68,13 +68,6 @@ enum PermissionProfile: String, CaseIterable, Identifiable {
         }
     }
 
-    var sandboxMode: SandboxMode {
-        switch permission {
-        case .readOnly: return .readOnly
-        case .workspace, .askBeforeChanges: return .workspaceWrite
-        }
-    }
-
     var allowsWrite: Bool { self != .readOnly }
 }
 
