@@ -9,6 +9,7 @@ struct ModelIntelligenceDeck: View {
 
     @State private var query = ""
     @State private var scrollID: String?
+    @State private var appeared = false
     @Namespace private var modeNamespace
 
     private var models: [String] {
@@ -44,6 +45,7 @@ struct ModelIntelligenceDeck: View {
                 }
             }
             .onAppear {
+                withAnimation(DSH.Motion.flow) { appeared = true }
                 if account.models.isEmpty {
                     Task { await account.refreshModels() }
                 }
@@ -69,8 +71,8 @@ struct ModelIntelligenceDeck: View {
 
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 12) {
-                    ForEach(models, id: \.self) { model in
-                        card(model)
+                    ForEach(Array(models.enumerated()), id: \.element) { index, model in
+                        card(model, index: index)
                             .id(model)
                     }
                 }
@@ -111,7 +113,7 @@ struct ModelIntelligenceDeck: View {
         .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
-    private func card(_ model: String) -> some View {
+    private func card(_ model: String, index: Int) -> some View {
         let selected = model == config.model
         let cap = ModelCapability.forModel(model)
 
@@ -152,7 +154,10 @@ struct ModelIntelligenceDeck: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(selected ? DSH.Palette.accent.opacity(0.8) : DSH.Palette.hairline, lineWidth: selected ? 1 : 0.5)
             )
-            .scaleEffect(selected ? 1 : 0.97)
+            .scaleEffect(appeared ? (selected ? 1.0 : 0.965) : 0.82)
+            .opacity(appeared ? 1 : 0)
+            .rotation3DEffect(.degrees(appeared ? 0 : (index.isMultiple(of: 2) ? -8 : 8)), axis: (x: 0, y: 1, z: 0))
+            .animation(DSH.Motion.flow.delay(Double(index) * 0.035), value: appeared)
             .animation(DSH.Motion.snap, value: selected)
         }
         .buttonStyle(.plain)
