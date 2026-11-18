@@ -3,7 +3,9 @@ name: Build NcnsDSH IPA
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    # 每 30 分钟一次会和 push 抢同一个 concurrency 组，macOS runner 又排得很慢；
+    # 改成每天一次兜底，正常出包靠 push。
+    - cron: "0 3 * * *"
   push:
     paths:
       - "App/**"
@@ -12,7 +14,8 @@ on:
 
 concurrency:
   group: ncnsdsh-ipa
-  cancel-in-progress: false
+  # 新提交会取消上一次（不管在跑还是在排队）：旧提交的包没人要，留着只是占 runner。
+  cancel-in-progress: true
 
 permissions:
   contents: write
