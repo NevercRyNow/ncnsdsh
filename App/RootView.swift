@@ -27,6 +27,7 @@ struct RootView: View {
         .preferredColorScheme(settings.appearance.scheme ?? .dark)
         .animation(.easeInOut(duration: 0.24), value: store.current?.id)
         .onAppear {
+            Haptics.prepare()
             // Siri / 快捷指令 / 小组件按下时，把意图交给当前窗口。
             NcnsIntentBridge.open = { target in
                 router.handle(target, demo: demo)

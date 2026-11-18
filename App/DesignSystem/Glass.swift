@@ -97,3 +97,22 @@ extension ButtonStyle where Self == NcnsGlassButtonStyle {
         NcnsGlassButtonStyle(prominent: true, tint: color)
     }
 }
+
+/// 把相邻的玻璃件放进同一个容器，让它们能融合、能共享形变。
+/// iOS 26 上是真正的 GlassEffectContainer；旧 SDK 原样返回。
+struct GlassGroup<Content: View>: View {
+    var spacing: CGFloat = 12
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            GlassEffectContainer(spacing: spacing) { content() }
+        } else {
+            content()
+        }
+        #else
+        content()
+        #endif
+    }
+}

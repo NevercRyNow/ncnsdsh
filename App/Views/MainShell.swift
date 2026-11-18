@@ -53,6 +53,7 @@ struct MainShell: View {
                     .tag(Tab.settings)
             }
             .tint(DSH.Palette.accent)
+            .sensoryFeedback(.selection, trigger: router.tab)
 
             if let session = liveSession, !chrome.chatOpen {
                 if expanded == session.id {

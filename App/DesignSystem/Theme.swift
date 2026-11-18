@@ -58,23 +58,6 @@ extension Color {
     }
 }
 
-enum Haptics {
-    static func tap() {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-    }
-
-    static func soft() {
-        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
-    }
-
-    static func success() {
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
-    }
-
-    static func failure() {
-        UINotificationFeedbackGenerator().notificationOccurred(.error)
-    }
-}
 
 enum Motion {
     static let snappy = Animation.spring(response: 0.3, dampingFraction: 0.72)
