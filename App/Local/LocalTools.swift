@@ -10,7 +10,7 @@ enum LocalTools {
     private static var speaker: AVSpeechSynthesizer?
     static var workspace: URL { AppFiles.workspace }
 
-    static let names = ["list_files", "read_file", "write_file", "device_info", "open_url", "clipboard", "notify", "speak", "text_analysis", "image_analysis"]
+    static let names = ["list_files", "read_file", "write_file", "device_info", "open_url", "clipboard", "notify", "speak", "text_analysis", "image_analysis", "run_javascript"]
 
     /// 只返回当前模式、模型能力、用户开关都允许的工具。
     static func definitions(allowing names: [String]) -> [[String: Any]] {
@@ -91,6 +91,20 @@ enum LocalTools {
                             "path": ["type": "string", "description": "相对工作区的图片路径。"]
                         ],
                         "required": ["path"]
+                    ]
+                ]
+            ],
+            [
+                "type": "function",
+                "function": [
+                    "name": "run_javascript",
+                    "description": "在本机执行一段 JavaScript（JavaScriptCore，不是 Node）。可用 console.log、fs.read(path)、fs.write(path, text)。",
+                    "parameters": [
+                        "type": "object",
+                        "properties": [
+                            "source": ["type": "string", "description": "要执行的 JS 源码。"]
+                        ],
+                        "required": ["source"]
                     ]
                 ]
             ],
@@ -247,6 +261,12 @@ enum LocalTools {
                     UNUserNotificationCenter.current().add(request)
                 }
                 return "已安排 \(Int(seconds)) 秒后通知：\(title)"
+
+            case "run_javascript":
+                guard let source = args["source"] as? String, !source.isEmpty else {
+                    return "错误：缺少 source"
+                }
+                return JavaScriptTool.run(source, allowsWrite: allowsWrite)
 
             case "speak":
                 guard let text = args["text"] as? String, !text.isEmpty else { return "错误：缺少 text" }
