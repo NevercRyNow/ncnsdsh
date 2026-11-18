@@ -71,8 +71,9 @@ struct CoreState: Equatable {
         state.runningCount = demo.runningCount
 
         let latest = demo.messages.values.flatMap { $0 }.max { $0.date < $1.date }
-        let toolRunning = latest?.tools.contains { $0.status == .running } ?? false
-        let toolFailed = latest?.tools.last?.status == .failed ?? false
+        let toolRunning = latest?.tools.contains(where: { $0.status == .running }) ?? false
+        let lastStatus: ToolStatus? = latest?.tools.last?.status
+        let toolFailed = lastStatus == .failed
 
         if demo.approval != nil {
             state.phase = .awaiting

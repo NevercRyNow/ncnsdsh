@@ -54,7 +54,7 @@ struct ChatMessage: Identifiable, Hashable {
     var date: Date
 }
 
-enum ToolStatus {
+enum ToolStatus: Equatable {
     case running
     case done
     case failed
