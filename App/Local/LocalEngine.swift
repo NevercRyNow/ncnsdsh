@@ -26,12 +26,23 @@ final class LocalEngine {
     func stream(
         messages: [LocalMessage],
         model: String,
-        key: String
+        key: String,
+        tools: [String],
+        allowsWrite: Bool,
+        modeHint: String?
     ) -> AsyncThrowingStream<LocalEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    try await pump(messages: messages, model: model, key: key, continuation: continuation)
+                    try await pump(
+                        messages: messages,
+                        model: model,
+                        key: key,
+                        tools: tools,
+                        allowsWrite: allowsWrite,
+                        modeHint: modeHint,
+                        continuation: continuation
+                    )
                     continuation.finish()
                 } catch is CancellationError {
                     continuation.finish()
@@ -49,6 +60,9 @@ final class LocalEngine {
         messages: [LocalMessage],
         model: String,
         key: String,
+        tools: [String],
+        allowsWrite: Bool,
+        modeHint: String?,
         continuation: AsyncThrowingStream<LocalEvent, Error>.Continuation
     ) async throws {
         var working = messages
@@ -62,6 +76,8 @@ final class LocalEngine {
                 messages: working,
                 model: model,
                 key: key,
+                tools: tools,
+                modeHint: modeHint,
                 continuation: continuation
             )
 
@@ -77,7 +93,7 @@ final class LocalEngine {
             for call in calls {
                 if Task.isCancelled { throw CancellationError() }
                 continuation.yield(.toolStarted(name: call.name, arguments: call.arguments))
-                let output = LocalTools.run(name: call.name, arguments: call.arguments)
+                let output = LocalTools.run(name: call.name, arguments: call.arguments, allowsWrite: allowsWrite)
                 continuation.yield(.toolFinished(name: call.name, output: output))
                 working.append(
                     LocalMessage(role: .tool, text: output, toolCallID: call.id, toolName: call.name)
@@ -94,6 +110,8 @@ final class LocalEngine {
         messages: [LocalMessage],
         model: String,
         key: String,
+        tools: [String],
+        modeHint: String?,
         continuation: AsyncThrowingStream<LocalEvent, Error>.Continuation
     ) async throws -> (String, [LocalToolCall]) {
         var request = URLRequest(url: endpoint)
@@ -106,9 +124,12 @@ final class LocalEngine {
         var body: [String: Any] = [
             "model": model,
             "stream": true,
-            "messages": wire(messages),
-            "tools": LocalTools.definitions,
+            "messages": wire(messages, modeHint: modeHint),
         ]
+        let filtered = LocalTools.definitions(allowing: tools)
+        if !filtered.isEmpty {
+            body["tools"] = filtered
+        }
         body["temperature"] = 0.6
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -168,8 +189,10 @@ final class LocalEngine {
 
     // MARK: - Wire format
 
-    private func wire(_ messages: [LocalMessage]) -> [[String: Any]] {
-        var out: [[String: Any]] = [["role": "system", "content": systemPrompt]]
+    private func wire(_ messages: [LocalMessage], modeHint: String?) -> [[String: Any]] {
+        var prompt = systemPrompt
+        if let modeHint { prompt += "\n" + modeHint }
+        var out: [[String: Any]] = [["role": "system", "content": prompt]]
         for message in messages {
             switch message.role {
             case .user:

@@ -7,6 +7,7 @@ struct LocalChatView: View {
 
     @EnvironmentObject private var local: LocalStore
     @EnvironmentObject private var account: AccountStore
+    @EnvironmentObject private var config: ModelConfigurationStore
     @EnvironmentObject private var chrome: AppChrome
     @Environment(\.scenePhase) private var scenePhase
 
@@ -114,7 +115,10 @@ struct LocalChatView: View {
             }
         }
         .onAppear {
-            pickedModel = session?.model ?? account.selectedModel
+            if session?.model == nil || config.model.isEmpty {
+                config.model = session?.model ?? account.selectedModel
+            }
+            pickedModel = config.model.isEmpty ? (session?.model ?? account.selectedModel) : config.model
             chrome.chatOpen = true
         }
         .onDisappear { chrome.chatOpen = false }
@@ -122,10 +126,13 @@ struct LocalChatView: View {
             WorkbenchView(sessionID: sessionID)
         }
         .sheet(isPresented: $showModelPicker) {
-            ModelPicker(selection: $pickedModel, models: account.models)
+            ModelIntelligenceDeck()
         }
         .onChange(of: pickedModel) { _, model in
             local.setModel(model, for: sessionID)
+        }
+        .onChange(of: config.model) { _, model in
+            pickedModel = model
         }
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
             guard case .success(let urls) = result, let url = urls.first else { return }
@@ -264,8 +271,11 @@ struct LocalChatView: View {
                 local.send(
                     outgoing,
                     in: sessionID,
-                    model: pickedModel.isEmpty ? (session?.model ?? account.selectedModel) : pickedModel,
-                    key: account.key
+                    model: config.model.isEmpty ? (session?.model ?? account.selectedModel) : config.model,
+                    key: account.key,
+                    tools: config.activeToolNames,
+                    allowsWrite: config.allowsWrite,
+                    modeHint: config.mode.systemHint
                 )
             },
             onAttach: { showImporter = true },
@@ -278,7 +288,15 @@ struct LocalChatView: View {
         let text = draft
         draft = ""
         Haptics.soft()
-        local.send(text, in: sessionID, model: session?.model ?? account.selectedModel, key: account.key)
+        local.send(
+            text,
+            in: sessionID,
+            model: config.model.isEmpty ? (session?.model ?? account.selectedModel) : config.model,
+            key: account.key,
+            tools: config.activeToolNames,
+            allowsWrite: config.allowsWrite,
+            modeHint: config.mode.systemHint
+        )
     }
 }
 

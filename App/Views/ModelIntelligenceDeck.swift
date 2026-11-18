@@ -1,0 +1,347 @@
+import SwiftUI
+
+/// 模型控制台：横向模型轨道、执行模式、权限、工具开关。
+/// 每一条都接到真实配置上——不支持的模型不会显示成可用。
+struct ModelIntelligenceDeck: View {
+    @EnvironmentObject private var account: AccountStore
+    @EnvironmentObject private var config: ModelConfigurationStore
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var query = ""
+    @State private var scrollID: String?
+    @Namespace private var modeNamespace
+
+    private var models: [String] {
+        let all = account.models.isEmpty ? ["deepseek-chat"] : account.models
+        guard !query.isEmpty else { return all }
+        return all.filter { $0.localizedCaseInsensitiveContains(query) }
+    }
+
+    private var capability: ModelCapability { ModelCapability.forModel(config.model) }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 26) {
+                    rail
+                    reasoning
+                    executionMode
+                    permission
+                    tools
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 40)
+            }
+            .scrollIndicators(.hidden)
+            .background(DSH.Palette.canvas)
+            .navigationTitle("模型控制台")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                        .fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                if account.models.isEmpty {
+                    Task { await account.refreshModels() }
+                }
+                scrollID = config.model
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    // MARK: - Rail
+
+    private var rail: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                sectionTitle("模型")
+                Spacer()
+                Text("\(models.count) 个可用")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(DSH.Palette.tertiary)
+            }
+
+            searchField
+
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 12) {
+                    ForEach(models, id: \.self) { model in
+                        card(model)
+                            .id(model)
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.vertical, 6)
+            }
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: $scrollID)
+            .scrollIndicators(.hidden)
+            .onChange(of: scrollID) { _, value in
+                guard let value, value != config.model else { return }
+                config.model = value
+                Haptics.tap()
+            }
+        }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12))
+                .foregroundStyle(DSH.Palette.tertiary)
+            TextField("搜索模型", text: $query)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(DSH.TypeScale.callout)
+                .foregroundStyle(DSH.Palette.text)
+            if !query.isEmpty {
+                Button { query = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(DSH.Palette.tertiary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private func card(_ model: String) -> some View {
+        let selected = model == config.model
+        let cap = ModelCapability.forModel(model)
+
+        return Button {
+            config.model = model
+            withAnimation(DSH.Motion.snap) { scrollID = model }
+            Haptics.tap()
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: selected ? "checkmark.circle.fill" : "cpu")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(selected ? DSH.Palette.accent : DSH.Palette.tertiary)
+                    Spacer()
+                    Text("DeepSeek")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(DSH.Palette.tertiary)
+                }
+
+                Text(model)
+                    .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(DSH.Palette.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                HStack(spacing: 4) {
+                    chip(cap.supportsTools ? "工具" : "无工具", on: cap.supportsTools)
+                    chip(cap.reasoningLevels.isEmpty ? "默认推理" : "推理", on: !cap.reasoningLevels.isEmpty)
+                }
+            }
+            .padding(12)
+            .frame(width: 158, height: 104, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(selected ? DSH.Palette.raised : DSH.Palette.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(selected ? DSH.Palette.accent.opacity(0.8) : DSH.Palette.hairline, lineWidth: selected ? 1 : 0.5)
+            )
+            .scaleEffect(selected ? 1 : 0.97)
+            .animation(DSH.Motion.snap, value: selected)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func chip(_ text: String, on: Bool) -> some View {
+        Text(text)
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(on ? DSH.Palette.secondary : DSH.Palette.tertiary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(DSH.Palette.raised, in: Capsule())
+    }
+
+    // MARK: - Reasoning
+
+    private var reasoning: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("推理强度")
+
+            if capability.reasoningLevels.isEmpty {
+                Text("\(config.model) 没有声明推理档位，请求里不会发送相关参数。")
+                    .font(DSH.TypeScale.footnote)
+                    .foregroundStyle(DSH.Palette.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else {
+                Text("该模型支持：\(capability.reasoningLevels.joined(separator: " / "))")
+                    .font(DSH.TypeScale.footnote)
+                    .foregroundStyle(DSH.Palette.secondary)
+            }
+        }
+    }
+
+    // MARK: - Execution mode
+
+    private var executionMode: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("执行模式")
+
+            HStack(spacing: 6) {
+                ForEach(ExecutionMode.allCases) { mode in
+                    Button {
+                        config.mode = mode
+                        Haptics.tap()
+                    } label: {
+                        Text(mode.title)
+                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(config.mode == mode ? Color.white : DSH.Palette.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 9)
+                            .background {
+                                if config.mode == mode {
+                                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                        .fill(DSH.Palette.accent)
+                                        .matchedGeometryEffect(id: "modePill", in: modeNamespace)
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(4)
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+            Text(config.mode.summary + " · " + (config.mode.allowsTools ? "可调用工具" : "不调用工具") + (config.mode.allowsWrites ? " · 可写文件" : ""))
+                .font(DSH.TypeScale.footnote)
+                .foregroundStyle(DSH.Palette.tertiary)
+
+            if !capability.supportsTools {
+                Label("\(config.model) 不支持函数调用，AGENT 模式的工具不会生效。", systemImage: "exclamationmark.triangle")
+                    .font(DSH.TypeScale.footnote)
+                    .foregroundStyle(DSH.Palette.warning)
+            }
+        }
+    }
+
+    // MARK: - Permission
+
+    private var permission: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("权限")
+
+            VStack(spacing: 0) {
+                ForEach(PermissionProfile.allCases) { profile in
+                    Button {
+                        config.permission = profile
+                        Haptics.tap()
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: config.permission == profile ? "largecircle.fill.circle" : "circle")
+                                .font(.system(size: 14))
+                                .foregroundStyle(config.permission == profile ? DSH.Palette.accent : DSH.Palette.tertiary)
+
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(profile.title)
+                                    .font(DSH.TypeScale.body)
+                                    .foregroundStyle(DSH.Palette.text)
+                                Text(profile.detail)
+                                    .font(DSH.TypeScale.footnote)
+                                    .foregroundStyle(DSH.Palette.tertiary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    if profile != PermissionProfile.allCases.last {
+                        Divider().overlay(DSH.Palette.hairline).padding(.leading, 40)
+                    }
+                }
+            }
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+    }
+
+    // MARK: - Tools
+
+    private var tools: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle("工具能力")
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 8) {
+                ForEach(ToolCapability.allCases) { tool in
+                    toolCapsule(tool)
+                }
+            }
+
+            Text("只有「文件 / 设备 / 系统 / 分析」接进了模型；其余是 App 内的工作台能力，模型无法调用，因此不可开启。")
+                .font(DSH.TypeScale.footnote)
+                .foregroundStyle(DSH.Palette.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func toolCapsule(_ tool: ToolCapability) -> some View {
+        let on = config.enabledTools.contains(tool)
+        let enabled = tool.wiredToModel
+
+        return Button {
+            guard enabled else { return }
+            if on { config.enabledTools.remove(tool) } else { config.enabledTools.insert(tool) }
+            Haptics.light()
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: tool.symbol)
+                    .font(.system(size: 12))
+                Text(tool.title)
+                    .font(.system(size: 12, weight: .medium))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if !enabled {
+                    Text("未接入")
+                        .font(.system(size: 8))
+                        .foregroundStyle(DSH.Palette.tertiary)
+                }
+            }
+            .foregroundStyle(enabled ? (on ? DSH.Palette.text : DSH.Palette.secondary) : DSH.Palette.tertiary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .background(
+                (on && enabled ? DSH.Palette.accent.opacity(0.18) : DSH.Palette.surface),
+                in: Capsule()
+            )
+            .overlay(
+                Capsule().strokeBorder(
+                    on && enabled ? DSH.Palette.accent.opacity(0.5) : DSH.Palette.hairline,
+                    lineWidth: 0.5
+                )
+            )
+            .opacity(enabled ? 1 : 0.5)
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Text(tool.note)
+        }
+    }
+
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(DSH.Palette.tertiary)
+            .textCase(.uppercase)
+            .tracking(1.1)
+    }
+}

@@ -105,7 +105,15 @@ final class LocalStore: ObservableObject {
         persist()
     }
 
-    func send(_ text: String, in id: UUID, model: String, key: String) {
+    func send(
+        _ text: String,
+        in id: UUID,
+        model: String,
+        key: String,
+        tools: [String] = [],
+        allowsWrite: Bool = true,
+        modeHint: String? = nil
+    ) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, runningID == nil else { return }
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
@@ -129,7 +137,14 @@ final class LocalStore: ObservableObject {
         task = Task { [weak self] in
             guard let self else { return }
             do {
-                for try await event in LocalEngine.shared.stream(messages: history, model: model, key: key) {
+                for try await event in LocalEngine.shared.stream(
+                    messages: history,
+                    model: model,
+                    key: key,
+                    tools: tools,
+                    allowsWrite: allowsWrite,
+                    modeHint: modeHint
+                ) {
                     if Task.isCancelled { break }
                     self.apply(event, to: id, placeholder: placeholder.id)
                 }

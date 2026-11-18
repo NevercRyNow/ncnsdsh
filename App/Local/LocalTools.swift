@@ -12,6 +12,17 @@ enum LocalTools {
 
     static let names = ["list_files", "read_file", "write_file", "device_info", "open_url", "clipboard", "notify", "speak", "text_analysis", "image_analysis"]
 
+    /// 只返回当前模式、模型能力、用户开关都允许的工具。
+    static func definitions(allowing names: [String]) -> [[String: Any]] {
+        guard !names.isEmpty else { return [] }
+        let set = Set(names)
+        return definitions.filter { entry in
+            guard let function = entry["function"] as? [String: Any],
+                  let name = function["name"] as? String else { return false }
+            return set.contains(name)
+        }
+    }
+
     static var definitions: [[String: Any]] {
         [
             [
@@ -154,7 +165,7 @@ enum LocalTools {
         ]
     }
 
-    static func run(name: String, arguments: String) -> String {
+    static func run(name: String, arguments: String, allowsWrite: Bool = true) -> String {
         let args = (try? JSONSerialization.jsonObject(with: Data(arguments.utf8))) as? [String: Any] ?? [:]
 
         do {
@@ -178,6 +189,9 @@ enum LocalTools {
                 return String(decoding: slice, as: UTF8.self)
 
             case "write_file":
+                guard allowsWrite else {
+                    return "拒绝：当前权限不允许写入。需要切到 AGENT 模式并放开写权限。"
+                }
                 guard let relative = args["path"] as? String, let content = args["content"] as? String else {
                     return "错误：缺少 path 或 content"
                 }

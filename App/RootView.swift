@@ -12,6 +12,7 @@ struct RootView: View {
     @StateObject private var phone = PhoneAuth()
     @StateObject private var chrome = AppChrome()
     @StateObject private var settings = SettingsStore()
+    @StateObject private var modelConfig = ModelConfigurationStore()
 
     var body: some View {
         MainShell()
@@ -24,6 +25,7 @@ struct RootView: View {
         .environmentObject(phone)
         .environmentObject(chrome)
         .environmentObject(settings)
+        .environmentObject(modelConfig)
         .preferredColorScheme(settings.appearance.scheme ?? .dark)
         .animation(.easeInOut(duration: 0.24), value: store.current?.id)
         .onAppear {
