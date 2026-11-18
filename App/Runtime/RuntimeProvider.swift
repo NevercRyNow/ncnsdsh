@@ -150,24 +150,48 @@ final class LinuxRuntime: RuntimeProvider {
 final class RemoteRuntime: RuntimeProvider {
     let kind: RuntimeKind = .remote
     private var host: Host?
+    private var lastProbe: RemoteProbeResult?
 
     func update(host: Host?) {
         self.host = host
+    }
+
+    /// 真实 HTTP 探测：只证明「这张地址现在通不通」，不证明协议已接入。
+    func probe() async -> RemoteProbeResult? {
+        guard let host else { return nil }
+        let result = await RemoteProbe.probe(host)
+        lastProbe = result
+        return result
     }
 
     func status() -> RuntimeStatus {
         guard let host else {
             return RuntimeStatus(kind: .remote, state: .unsupported("未添加主机"), version: "—", detail: "先配对一台电脑或服务器")
         }
+        let state: RuntimeState
+        if let probe = lastProbe, probe.reachable {
+            state = .unsupported("协议未接入")
+        } else if let probe = lastProbe {
+            state = .failed("不可达 · \(probe.detail)")
+        } else {
+            state = .unsupported("未探测")
+        }
         return RuntimeStatus(
             kind: .remote,
-            state: .unsupported("协议未接入"),
+            state: state,
             version: "未探测",
-            detail: host.originText
+            detail: host.originText + (lastProbe.map { " · \($0.detail)" } ?? "")
         )
     }
 
-    func start() async throws { throw RuntimeError.unsupported("远程协议尚未接入") }
+    func start() async throws {
+        guard host != nil else { throw RuntimeError.unsupported("先配对一台电脑或服务器") }
+        let result = await probe()
+        guard result?.reachable == true else {
+            throw RuntimeError.unsupported("无法连接：\(result?.detail ?? "未探测")")
+        }
+        throw RuntimeError.unsupported("地址可达，但 session/follow 协议尚未接入")
+    }
     func stop() async throws { throw RuntimeError.unsupported("远程协议尚未接入") }
     func pause() async throws { throw RuntimeError.unsupported("远程协议尚未接入") }
     func resume() async throws { throw RuntimeError.unsupported("远程协议尚未接入") }

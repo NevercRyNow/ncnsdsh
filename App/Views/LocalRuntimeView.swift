@@ -16,6 +16,8 @@ struct LocalRuntimeView: View {
     @State private var confirmUninstall = false
     @State private var showLinux = false
     @State private var pendingRemoval: Host?
+    @State private var backups: [BackupInfo] = []
+    @State private var restoreTarget: BackupInfo?
 
     private var running: Bool { settings.silentAudio || settings.keepRunning }
 
@@ -27,6 +29,7 @@ struct LocalRuntimeView: View {
                     controls
                     autoStart
                     runtimeSection
+                    backupsSection
                     linuxSection
                     logCard
                     environment
@@ -61,6 +64,29 @@ struct LocalRuntimeView: View {
         }
         .sheet(isPresented: $showLinux) {
             LinuxServerSheet().environmentObject(store).environmentObject(environmentManager)
+        }
+        .confirmationDialog(
+            restoreTarget.map { "用 \($0.id) 覆盖当前工作区？" } ?? "",
+            isPresented: Binding(
+                get: { restoreTarget != nil },
+                set: { if !$0 { restoreTarget = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("恢复", role: .destructive) {
+                if let info = restoreTarget {
+                    do {
+                        try WorkspaceBackup.restore(info)
+                        Haptics.success()
+                    } catch {
+                        RuntimeLog.shared.log("恢复失败：\(error.localizedDescription)", level: .error)
+                        Haptics.failure()
+                    }
+                    backups = WorkspaceBackup.list()
+                }
+                restoreTarget = nil
+            }
+            Button("取消", role: .cancel) { restoreTarget = nil }
         }
         .confirmationDialog(
             pendingRemoval.map { "移除 \($0.displayName)？" } ?? "",
@@ -211,6 +237,81 @@ struct LocalRuntimeView: View {
         .onAppear {
             runtimes.refresh(host: store.current)
         }
+    }
+
+    private var backupsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("工作区备份")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(DSH.Palette.tertiary)
+                    .textCase(.uppercase)
+                    .tracking(1.1)
+                Spacer()
+                Button {
+                    Haptics.light()
+                    if let info = try? WorkspaceBackup.create() {
+                        backups = WorkspaceBackup.list()
+                        Haptics.success()
+                        _ = info
+                    }
+                } label: {
+                    Text("立即备份")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(DSH.Palette.accent)
+                }
+                .buttonStyle(.plain)
+            }
+
+            VStack(spacing: 0) {
+                if backups.isEmpty {
+                    Text("还没有备份。备份会复制工作区到 Application Support，最多保留 5 份。")
+                        .font(DSH.TypeScale.footnote)
+                        .foregroundStyle(DSH.Palette.tertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                } else {
+                    ForEach(backups.prefix(3)) { info in
+                        HStack(spacing: 10) {
+                            Image(systemName: "archivebox")
+                                .font(.system(size: 12))
+                                .foregroundStyle(DSH.Palette.secondary)
+                                .frame(width: 22)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(info.id)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(DSH.Palette.text)
+                                    .lineLimit(1)
+                                Text("\(info.files) 个文件 · \(byteText(info.bytes))")
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(DSH.Palette.tertiary)
+                            }
+                            Spacer()
+                            Button("恢复") {
+                                restoreTarget = info
+                            }
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(DSH.Palette.accent)
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+
+                        if info.id != backups.prefix(3).last?.id {
+                            divider
+                        }
+                    }
+                }
+            }
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .onAppear {
+            backups = WorkspaceBackup.list()
+        }
+    }
+
+    private func byteText(_ bytes: Int) -> String {
+        ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
     }
 
     private var linuxHosts: [Host] {

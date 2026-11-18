@@ -27,6 +27,15 @@ enum AppFiles {
         return url
     }
 
+    /// 备份不进「文件」App，放在 Application Support 下。
+    static var backups: URL {
+        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        let dir = url.appendingPathComponent("NcnsDSH/backups", isDirectory: true)
+        ensure(dir)
+        return dir
+    }
+
     /// 「文件」App 里看到的路径字样。
     static var displayPath: String {
         "On My iPhone/NcnsDSH"
