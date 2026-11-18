@@ -10,6 +10,7 @@ struct ModelIntelligenceDeck: View {
     @State private var query = ""
     @State private var scrollID: String?
     @State private var appeared = false
+    @State private var sweep = false
     @Namespace private var modeNamespace
 
     private var models: [String] {
@@ -46,6 +47,7 @@ struct ModelIntelligenceDeck: View {
             }
             .onAppear {
                 withAnimation(DSH.Motion.flow) { appeared = true }
+                withAnimation(.easeInOut(duration: 0.9).delay(0.15)) { sweep = true }
                 if account.models.isEmpty {
                     Task { await account.refreshModels() }
                 }
@@ -154,6 +156,21 @@ struct ModelIntelligenceDeck: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(selected ? DSH.Palette.accent.opacity(0.8) : DSH.Palette.hairline, lineWidth: selected ? 1 : 0.5)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [.clear, Color.white.opacity(0.22), .clear],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .offset(x: sweep ? 180 : -180)
+                    .blur(radius: 6)
+                    .mask(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .allowsHitTesting(false)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .scaleEffect(appeared ? (selected ? 1.0 : 0.965) : 0.82)
             .opacity(appeared ? 1 : 0)
             .rotation3DEffect(.degrees(appeared ? 0 : (index.isMultiple(of: 2) ? -8 : 8)), axis: (x: 0, y: 1, z: 0))
