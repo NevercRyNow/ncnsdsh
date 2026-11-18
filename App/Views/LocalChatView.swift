@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct LocalChatView: View {
     let sessionID: UUID
@@ -15,6 +16,7 @@ struct LocalChatView: View {
     @State private var pickedModel: String = ""
     @State private var stagesExpanded = true
     @State private var showExport = false
+    @State private var showImporter = false
     @FocusState private var composerFocused: Bool
 
     private var session: LocalSession? { local.session(sessionID) }
@@ -124,6 +126,22 @@ struct LocalChatView: View {
         }
         .onChange(of: pickedModel) { _, model in
             local.setModel(model, for: sessionID)
+        }
+        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
+            guard case .success(let urls) = result, let url = urls.first else { return }
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+            let name = url.lastPathComponent
+            let destination = LocalTools.workspace.appendingPathComponent(name)
+            do {
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.copyItem(at: url, to: destination)
+                draft += (draft.isEmpty ? "" : "\n") + "已附加：\(name)"
+                Haptics.success()
+            } catch {
+                Haptics.failure()
+            }
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
@@ -251,6 +269,7 @@ struct LocalChatView: View {
                 )
             },
             onModel: { showModelPicker = true },
+            onAttach: { showImporter = true },
             focused: $composerFocused
         )
     }

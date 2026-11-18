@@ -1,12 +1,16 @@
 import Foundation
 import UIKit
 import UserNotifications
+import AVFoundation
+import NaturalLanguage
+import Vision
 
 /// 本机模式能动的只有这个沙盒工作区：`Documents/NcnsDSH/workspace`。
 enum LocalTools {
+    private static var speaker: AVSpeechSynthesizer?
     static var workspace: URL { AppFiles.workspace }
 
-    static let names = ["list_files", "read_file", "write_file", "device_info", "open_url", "clipboard", "notify"]
+    static let names = ["list_files", "read_file", "write_file", "device_info", "open_url", "clipboard", "notify", "speak", "text_analysis", "image_analysis"]
 
     static var definitions: [[String: Any]] {
         [
@@ -32,6 +36,48 @@ enum LocalTools {
                         "type": "object",
                         "properties": [
                             "path": ["type": "string", "description": "相对工作区的文件路径。"]
+                        ],
+                        "required": ["path"]
+                    ]
+                ]
+            ],
+            [
+                "type": "function",
+                "function": [
+                    "name": "speak",
+                    "description": "用系统语音把一段话读出来。",
+                    "parameters": [
+                        "type": "object",
+                        "properties": [
+                            "text": ["type": "string", "description": "要朗读的文本，最多 600 字。"]
+                        ],
+                        "required": ["text"]
+                    ]
+                ]
+            ],
+            [
+                "type": "function",
+                "function": [
+                    "name": "text_analysis",
+                    "description": "识别一段文本的主要语言，并抽出人名、地名、机构名。",
+                    "parameters": [
+                        "type": "object",
+                        "properties": [
+                            "text": ["type": "string", "description": "要分析的文本。"]
+                        ],
+                        "required": ["text"]
+                    ]
+                ]
+            ],
+            [
+                "type": "function",
+                "function": [
+                    "name": "image_analysis",
+                    "description": "识别工作区里一张图片上的文字（OCR）。",
+                    "parameters": [
+                        "type": "object",
+                        "properties": [
+                            "path": ["type": "string", "description": "相对工作区的图片路径。"]
                         ],
                         "required": ["path"]
                     ]
@@ -187,6 +233,55 @@ enum LocalTools {
                     UNUserNotificationCenter.current().add(request)
                 }
                 return "已安排 \(Int(seconds)) 秒后通知：\(title)"
+
+            case "speak":
+                guard let text = args["text"] as? String, !text.isEmpty else { return "错误：缺少 text" }
+                let spoken = String(text.prefix(600))
+                DispatchQueue.main.async {
+                    let synthesizer = AVSpeechSynthesizer()
+                    let utterance = AVSpeechUtterance(string: spoken)
+                    utterance.voice = AVSpeechSynthesisVoice(language: "zh-CN")
+                    utterance.rate = 0.5
+                    synthesizer.speak(utterance)
+                    Self.speaker = synthesizer
+                }
+                return "开始朗读（\(spoken.count) 字）"
+
+            case "text_analysis":
+                guard let text = args["text"] as? String, !text.isEmpty else { return "错误：缺少 text" }
+                let language = NLLanguageRecognizer.dominantLanguage(for: text)?.rawValue ?? "unknown"
+                let tagger = NLTagger(tagSchemes: [.nameType])
+                tagger.string = text
+                var entities: [String] = []
+                tagger.enumerateTags(
+                    in: text.startIndex..<text.endIndex,
+                    unit: .word,
+                    scheme: .nameType,
+                    options: [.omitPunctuation, .omitWhitespace]
+                ) { tag, range in
+                    if let tag, [.personalName, .placeName, .organizationName].contains(tag) {
+                        entities.append("\(text[range])（\(tag.rawValue)）")
+                    }
+                    return true
+                }
+                let list = entities.isEmpty ? "（没有识别到实体）" : entities.prefix(20).joined(separator: "、")
+                return "语言：\(language)\n实体：\(list)"
+
+            case "image_analysis":
+                guard let relative = args["path"] as? String else { return "错误：缺少 path" }
+                let url = try resolve(relative)
+                guard let image = UIImage(contentsOfFile: url.path), let cgImage = image.cgImage else {
+                    return "错误：读不了这张图片"
+                }
+                let request = VNRecognizeTextRequest()
+                request.recognitionLevel = .accurate
+                request.recognitionLanguages = ["zh-Hans", "en-US"]
+                request.usesLanguageCorrection = true
+                let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+                try handler.perform([request])
+                let lines = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }
+                if lines.isEmpty { return "（没有识别到文字）" }
+                return String(lines.joined(separator: "\n").prefix(3_000))
 
             default:
                 return "错误：没有这个工具 \(name)"
