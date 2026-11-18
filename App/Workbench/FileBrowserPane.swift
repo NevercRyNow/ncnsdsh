@@ -42,6 +42,9 @@ struct FileBrowserPane: View {
             }
         }
         .onAppear(perform: load)
+        .sheet(isPresented: $editing) {
+            FileEditorView(url: url)
+        }
         .onChange(of: directory) { _, _ in load() }
         .sheet(item: $preview) { url in
             FilePreview(url: url)
@@ -165,6 +168,7 @@ struct FilePreview: View {
     let url: URL
     @Environment(\.dismiss) private var dismiss
     @State private var text: String?
+    @State private var editing = false
 
     var body: some View {
         NavigationStack {
@@ -187,12 +191,20 @@ struct FilePreview: View {
             .navigationTitle(url.lastPathComponent)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    if text != nil {
+                        Button("编辑") { editing = true }
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完成") { dismiss() }
                 }
             }
         }
         .onAppear(perform: load)
+        .sheet(isPresented: $editing) {
+            FileEditorView(url: url)
+        }
     }
 
     private func load() {
