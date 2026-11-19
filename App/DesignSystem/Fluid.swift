@@ -27,6 +27,10 @@ enum Fluid {
         static let coral = adaptive(dark: 0xFF6B6B, light: 0xC4271E)
         /// 技术内容的分隔线。
         static let hairline = translucent(dark: 0.10, light: 0.12)
+        /// 卡片底：比画布亮一层。
+        static let surface = translucent(dark: 0.06, light: 0.04)
+        /// 再亮一层：选中态、需要抬起的卡片。
+        static let raised = translucent(dark: 0.10, light: 0.06)
     }
 
     enum Shape {

@@ -57,7 +57,7 @@ struct ModelIntelligenceDeck: View {
                 .padding(.bottom, 40)
             }
             .scrollIndicators(.hidden)
-            .background(DSH.Palette.canvas)
+            .background(Fluid.Palette.obsidian)
             .navigationTitle("模型控制台")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -85,7 +85,7 @@ struct ModelIntelligenceDeck: View {
                 Spacer()
                 Text("\(models.count) 个可用")
                     .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(DSH.Palette.tertiary)
+                    .foregroundStyle(Fluid.Palette.slate)
             }
 
             searchField
@@ -115,23 +115,23 @@ struct ModelIntelligenceDeck: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 12))
-                .foregroundStyle(DSH.Palette.tertiary)
+                .foregroundStyle(Fluid.Palette.slate)
             TextField("搜索模型", text: $query)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(DSH.TypeScale.callout)
-                .foregroundStyle(DSH.Palette.text)
+                .foregroundStyle(Fluid.Palette.text)
             if !query.isEmpty {
                 Button { query = "" } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(DSH.Palette.tertiary)
+                        .foregroundStyle(Fluid.Palette.slate)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(Fluid.Palette.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func card(_ model: String, index: Int) -> some View {
@@ -147,16 +147,16 @@ struct ModelIntelligenceDeck: View {
                 HStack(spacing: 6) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "cpu")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(selected ? DSH.Palette.accent : DSH.Palette.tertiary)
+                        .foregroundStyle(selected ? Fluid.Palette.iceBlue : Fluid.Palette.slate)
                     Spacer()
                     Text("DeepSeek")
                         .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(DSH.Palette.tertiary)
+                        .foregroundStyle(Fluid.Palette.slate)
                 }
 
                 Text(model)
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(DSH.Palette.text)
+                    .foregroundStyle(Fluid.Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
@@ -169,7 +169,7 @@ struct ModelIntelligenceDeck: View {
             .frame(width: 158, height: 104, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(selected ? DSH.Palette.raised : DSH.Palette.surface)
+                    .fill(selected ? Fluid.Palette.raised : Fluid.Palette.surface)
             )
             // 选中底纹：量出来的 0° 横向渐变（深蓝 → 紫），压低不透明度让白字仍然够亮。
             .background(
@@ -200,7 +200,7 @@ struct ModelIntelligenceDeck: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(selected ? DSH.Palette.accent.opacity(0.45) : DSH.Palette.hairline, lineWidth: 0.5)
+                    .strokeBorder(selected ? Fluid.Palette.iceBlue.opacity(0.45) : Fluid.Palette.hairline, lineWidth: 0.5)
             )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             // 选中形变：选中的留在原位，其余缩小 6%、压到 85% 透明度——参考片里是别的行直接收起。
@@ -216,10 +216,10 @@ struct ModelIntelligenceDeck: View {
     private func chip(_ text: String, on: Bool) -> some View {
         Text(text)
             .font(.system(size: 9, weight: .medium))
-            .foregroundStyle(on ? DSH.Palette.secondary : DSH.Palette.tertiary)
+            .foregroundStyle(on ? Fluid.Palette.mist : Fluid.Palette.slate)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(DSH.Palette.raised, in: Capsule())
+            .background(Fluid.Palette.raised, in: Capsule())
     }
 
     // MARK: - Reasoning
@@ -231,15 +231,15 @@ struct ModelIntelligenceDeck: View {
             if capability.reasoningLevels.isEmpty {
                 Text("\(config.model) 没有声明推理档位，请求里不会发送相关参数。")
                     .font(DSH.TypeScale.footnote)
-                    .foregroundStyle(DSH.Palette.secondary)
+                    .foregroundStyle(Fluid.Palette.mist)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(Fluid.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
                 Text("该模型支持：\(capability.reasoningLevels.joined(separator: " / "))")
                     .font(DSH.TypeScale.footnote)
-                    .foregroundStyle(DSH.Palette.secondary)
+                    .foregroundStyle(Fluid.Palette.mist)
             }
         }
     }
@@ -258,13 +258,13 @@ struct ModelIntelligenceDeck: View {
                     } label: {
                         Text(mode.title)
                             .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(config.mode == mode ? Color.white : DSH.Palette.secondary)
+                            .foregroundStyle(config.mode == mode ? Color.white : Fluid.Palette.mist)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 9)
                             .background {
                                 if config.mode == mode {
                                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                        .fill(DSH.Palette.accent)
+                                        .fill(Fluid.Palette.iceBlue)
                                         .matchedGeometryEffect(id: "modePill", in: modeNamespace)
                                 }
                             }
@@ -273,16 +273,16 @@ struct ModelIntelligenceDeck: View {
                 }
             }
             .padding(4)
-            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Fluid.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             Text(config.mode.summary + " · " + (config.mode.allowsTools ? "可调用工具" : "不调用工具") + (config.mode.allowsWrites ? " · 可写文件" : ""))
                 .font(DSH.TypeScale.footnote)
-                .foregroundStyle(DSH.Palette.tertiary)
+                .foregroundStyle(Fluid.Palette.slate)
 
             if !capability.supportsTools {
                 Label("\(config.model) 不支持函数调用，AGENT 模式的工具不会生效。", systemImage: "exclamationmark.triangle")
                     .font(DSH.TypeScale.footnote)
-                    .foregroundStyle(DSH.Palette.warning)
+                    .foregroundStyle(Fluid.Palette.amber)
             }
         }
     }
@@ -302,15 +302,15 @@ struct ModelIntelligenceDeck: View {
                         HStack(spacing: 10) {
                             Image(systemName: config.permission == profile ? "largecircle.fill.circle" : "circle")
                                 .font(.system(size: 14))
-                                .foregroundStyle(config.permission == profile ? DSH.Palette.accent : DSH.Palette.tertiary)
+                                .foregroundStyle(config.permission == profile ? Fluid.Palette.iceBlue : Fluid.Palette.slate)
 
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(profile.title)
                                     .font(DSH.TypeScale.body)
-                                    .foregroundStyle(DSH.Palette.text)
+                                    .foregroundStyle(Fluid.Palette.text)
                                 Text(profile.detail)
                                     .font(DSH.TypeScale.footnote)
-                                    .foregroundStyle(DSH.Palette.tertiary)
+                                    .foregroundStyle(Fluid.Palette.slate)
                             }
 
                             Spacer()
@@ -322,11 +322,11 @@ struct ModelIntelligenceDeck: View {
                     .buttonStyle(.plain)
 
                     if profile != PermissionProfile.allCases.last {
-                        Divider().overlay(DSH.Palette.hairline).padding(.leading, 40)
+                        Divider().overlay(Fluid.Palette.hairline).padding(.leading, 40)
                     }
                 }
             }
-            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Fluid.Palette.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
     }
 
@@ -344,7 +344,7 @@ struct ModelIntelligenceDeck: View {
 
             Text("只有「文件 / 设备 / 系统 / 分析」接进了模型；其余是 App 内的工作台能力，模型无法调用，因此不可开启。")
                 .font(DSH.TypeScale.footnote)
-                .foregroundStyle(DSH.Palette.tertiary)
+                .foregroundStyle(Fluid.Palette.slate)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -368,19 +368,19 @@ struct ModelIntelligenceDeck: View {
                 if !enabled {
                     Text("未接入")
                         .font(.system(size: 8))
-                        .foregroundStyle(DSH.Palette.tertiary)
+                        .foregroundStyle(Fluid.Palette.slate)
                 }
             }
-            .foregroundStyle(enabled ? (on ? DSH.Palette.text : DSH.Palette.secondary) : DSH.Palette.tertiary)
+            .foregroundStyle(enabled ? (on ? Fluid.Palette.text : Fluid.Palette.mist) : Fluid.Palette.slate)
             .padding(.horizontal, 10)
             .padding(.vertical, 9)
             .background(
-                (on && enabled ? DSH.Palette.accent.opacity(0.18) : DSH.Palette.surface),
+                (on && enabled ? Fluid.Palette.iceBlue.opacity(0.18) : Fluid.Palette.surface),
                 in: Capsule()
             )
             .overlay(
                 Capsule().strokeBorder(
-                    on && enabled ? DSH.Palette.accent.opacity(0.5) : DSH.Palette.hairline,
+                    on && enabled ? Fluid.Palette.iceBlue.opacity(0.5) : Fluid.Palette.hairline,
                     lineWidth: 0.5
                 )
             )
@@ -395,7 +395,7 @@ struct ModelIntelligenceDeck: View {
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(DSH.Palette.tertiary)
+            .foregroundStyle(Fluid.Palette.slate)
             .textCase(.uppercase)
             .tracking(1.1)
     }

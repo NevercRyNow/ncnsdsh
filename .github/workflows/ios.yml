@@ -72,7 +72,9 @@ jobs:
           tag_name: latest-build
           name: Latest build
           prerelease: false
-          files: NcnsDSH-unsigned.ipa
+          files: |
+            NcnsDSH-unsigned.ipa
+            SHA256.txt
 
       - name: Upload build log on failure
         if: failure()
