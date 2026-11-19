@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// 本机运行时：状态、启停、日志、环境信息、重置。
 /// 它不是 Node 引擎——没有端口、没有子进程；这里是 App 自己的运行时。
@@ -538,8 +539,24 @@ struct LocalRuntimeView: View {
                         Text(engineDetail)
                             .font(Fluid.Typography.caption)
                             .foregroundStyle(Fluid.Palette.mist)
-                            .lineLimit(3)
                             .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                            .contextMenu {
+                                // 引擎的失败原文要能一键复制，不然只能手抄。
+                                Button {
+                                    UIPasteboard.general.string = engineDetail
+                                    Haptics.tap()
+                                } label: {
+                                    Label("复制状态", systemImage: "doc.on.doc")
+                                }
+                                if engine.isRunning {
+                                    Button {
+                                        engine.refreshState()
+                                    } label: {
+                                        Label("刷新状态", systemImage: "arrow.clockwise")
+                                    }
+                                }
+                            }
                     }
                     Spacer(minLength: 6)
                     Button(engine.isRunning ? "停止" : "启动") {
