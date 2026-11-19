@@ -31,10 +31,10 @@ struct LocalRuntimeView: View {
                     autoStart
                     runtimeSection
                     capabilitySection
-                    backupsSection
+                    environment
                     linuxSection
                     logCard
-                    environment
+                    backupsSection
                     danger
                 }
                 .padding(.horizontal, 20)
