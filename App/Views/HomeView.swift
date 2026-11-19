@@ -17,9 +17,7 @@ struct HomeView: View {
         NavigationStack(path: $router.path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
-                    header
-                    coreStrip
-                    statusStrip
+                    hero
                     quickActions
                     currentSession
                     projectsShelf
@@ -45,9 +43,54 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Hero
 
-    private var header: some View {
+    /// 顶部一块：品牌 + 环境、智能核心、三个计数。原来是三条独立的横条，
+    /// 首屏被切成三段，信息权重拉不开。
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            headerRow
+
+            HStack(alignment: .center, spacing: 14) {
+                IntelligenceCore(state: coreState, size: 46)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(coreState.phase.title)
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundStyle(Fluid.Palette.text)
+                    Text(coreState.detail)
+                        .font(Fluid.Typography.caption)
+                        .foregroundStyle(Fluid.Palette.mist)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 8)
+
+                if coreState.remote {
+                    Image(systemName: "desktopcomputer")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Fluid.Palette.iceBlue)
+                        .accessibilityLabel("远程主机已连接")
+                }
+            }
+
+            Rectangle()
+                .fill(Fluid.Palette.hairline)
+                .frame(height: 0.5)
+
+            HStack(spacing: 0) {
+                metric("\(demo.runningCount)", "运行中", tint: Fluid.Palette.iceBlue)
+                separator
+                metric("\(build.recent.count)", "构建", tint: Fluid.Palette.mist)
+                separator
+                metric("\(plugins.installed.count)", "插件", tint: Fluid.Palette.mist)
+            }
+        }
+        .padding(16)
+        .fluidSurface(cornerRadius: Fluid.Shape.panel)
+    }
+
+    private var headerRow: some View {
         HStack(alignment: .center, spacing: 12) {
             BrandMark(size: 36)
 
@@ -85,34 +128,6 @@ struct HomeView: View {
         CoreState.derive(demo: demo, remote: store.current != nil)
     }
 
-    private var coreStrip: some View {
-        HStack(spacing: 12) {
-            IntelligenceCore(state: coreState, size: 36)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(coreState.phase.title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Fluid.Palette.text)
-                Text(coreState.detail)
-                    .font(Fluid.Typography.caption)
-                    .foregroundStyle(Fluid.Palette.mist)
-                    .lineLimit(1)
-            }
-
-            Spacer(minLength: 8)
-
-            if coreState.remote {
-                Image(systemName: "desktopcomputer")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Fluid.Palette.iceBlue)
-                    .accessibilityLabel("远程主机已连接")
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .fluidSurface()
-    }
-
     private var workspaceLine: String {
         if let host = store.current { return host.displayName }
         if account.isSignedIn { return "本机模式 · \(account.selectedModel)" }
@@ -120,19 +135,6 @@ struct HomeView: View {
     }
 
     // MARK: - Status
-
-    private var statusStrip: some View {
-        HStack(spacing: 0) {
-            metric("\(demo.runningCount)", "运行中", tint: DSH.Palette.accent)
-            separator
-            metric("\(build.recent.count)", "构建", tint: DSH.Palette.secondary)
-            separator
-            metric("\(plugins.installed.count)", "插件", tint: DSH.Palette.secondary)
-        }
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity)
-        .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: DSH.Radius.card, style: .continuous))
-    }
 
     private var separator: some View {
         Rectangle()
