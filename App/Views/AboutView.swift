@@ -35,8 +35,8 @@ struct AboutView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
                     hero
-                    applicationSection
-                    creditsSection
+                    versionBlock
+                    producerBlock
                     projectSection
                     acknowledgementsSection
                     footer
@@ -118,34 +118,75 @@ struct AboutView: View {
         .opacity(appeared ? 1 : 0)
     }
 
-    // MARK: - Application
+    // MARK: - Version & Credits
 
-    private var applicationSection: some View {
-        section("Application") {
-            rows([
-                ("版本", version),
-                ("构建号", build),
-                ("平台", "iOS · \(UIDevice.current.systemVersion)"),
-                ("最低系统", minimumOS)
-            ])
+    /// 版本号单独成块：大号等宽数字 + 构建号 + 可复制。
+    private var versionBlock: some View {
+        Button {
+            copyVersion()
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("版本")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .tracking(1.4)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Fluid.Palette.slate)
+                    Text(version)
+                        .font(.system(size: 34, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Fluid.Palette.text)
+                }
+
+                Text("build \(build)")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(Fluid.Palette.mist)
+                    .padding(.bottom, 6)
+
+                Spacer(minLength: 8)
+
+                Text(copied ? "已复制" : "复制")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(copied ? Fluid.Palette.mint : Fluid.Palette.iceBlue)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Fluid.Palette.graphite, in: Capsule())
+                    .padding(.bottom, 4)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fluidSurface(cornerRadius: Fluid.Shape.panel)
         }
-        .entrance(appeared, index: 1, reduceMotion: reduceMotion)
+        .buttonStyle(.plain)
+        .accessibilityLabel("版本 \(version)，构建号 \(build)")
+        .accessibilityHint("轻点复制版本信息")
     }
 
-    // MARK: - Credits
+    /// 制作人单独成块，不混在表格里。
+    private var producerBlock: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("制作人")
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .tracking(1.4)
+                .textCase(.uppercase)
+                .foregroundStyle(Fluid.Palette.slate)
 
-    private var creditsSection: some View {
-        section("Credits") {
-            rows([
-                ("设计与开发", "郑壹鸣"),
-                ("Created by", "Zheng Yiming"),
-                ("视觉方向", "Fluid Intelligence")
-            ])
+            Text("郑壹鸣")
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(Fluid.Palette.text)
+
+            Text("Created by Zheng Yiming")
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(Fluid.Palette.mist)
+
+            Text("设计与开发 · 视觉与工程")
+                .font(Fluid.Typography.caption)
+                .foregroundStyle(Fluid.Palette.slate)
+                .padding(.top, 2)
         }
-        .entrance(appeared, index: 2, reduceMotion: reduceMotion)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fluidSurface(cornerRadius: Fluid.Shape.panel)
     }
-
-    // MARK: - Project
 
     private var projectSection: some View {
         section("Project") {

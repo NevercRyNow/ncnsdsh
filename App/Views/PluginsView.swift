@@ -1,17 +1,21 @@
 import SwiftUI
+import UIKit
 
 struct PluginsView: View {
     @EnvironmentObject private var store: PluginStore
+    @StateObject private var market = MarketStore()
 
     enum Segment: String, CaseIterable {
         case installed = "已安装"
-        case market = "商店"
+        case market = "市场"
     }
 
     @State private var segment: Segment = .installed
     @State private var query = ""
     @State private var category = "全部"
     @State private var installing: Set<String> = []
+    @State private var marketCategory = "全部"
+    @State private var copiedPackage: String?
 
     var body: some View {
         NavigationStack {
@@ -50,9 +54,9 @@ struct PluginsView: View {
                     .pickerStyle(.segmented)
 
                     if segment == .installed {
-                        list(filter(store.installed), empty: query.isEmpty ? "还没有装插件。去商店看看。" : "没有匹配的已安装插件。")
+                        list(filter(store.installed), empty: query.isEmpty ? "还没有装插件。去市场看看。" : "没有匹配的已安装插件。")
                     } else {
-                        list(filter(store.store), empty: query.isEmpty ? "商店里的都装上了。" : "没有匹配的插件。")
+                        marketSection
                     }
                 }
                 .padding(.horizontal, DSH.Inset.gutter)
@@ -63,7 +67,159 @@ struct PluginsView: View {
             .background(DSH.Palette.canvas)
             .navigationTitle("插件")
             .navigationBarTitleDisplayMode(.large)
+            .task(id: segment) {
+                if segment == .market { await market.loadIfNeeded() }
+            }
         }
+    }
+
+    // MARK: - Market（真实目录）
+
+    /// 市场数据来自 go.dshtui.com/market/index.json；App 只展示，不安装、不执行。
+    @ViewBuilder
+    private var marketSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            switch market.state {
+            case .idle, .loading:
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("正在读取插件市场…")
+                        .font(DSH.TypeScale.footnote)
+                        .foregroundStyle(DSH.Palette.secondary)
+                }
+                .padding(.vertical, 20)
+
+            case .failed(let message):
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("市场暂时读不到")
+                        .font(DSH.TypeScale.headline)
+                        .foregroundStyle(DSH.Palette.text)
+                    Text(message)
+                        .font(DSH.TypeScale.footnote)
+                        .foregroundStyle(DSH.Palette.tertiary)
+                    Button("重试") { Task { await market.refresh() } }
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(DSH.Palette.accent)
+                }
+                .padding(.vertical, 16)
+
+            case .loaded:
+                marketChips
+
+                let items = market.filter(query, category: marketCategory)
+                if items.isEmpty {
+                    Text("没有匹配的插件。")
+                        .font(DSH.TypeScale.callout)
+                        .foregroundStyle(DSH.Palette.secondary)
+                        .padding(.vertical, 24)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(items) { plugin in
+                            marketRow(plugin)
+                            if plugin.id != items.last?.id {
+                                Divider().overlay(DSH.Palette.hairline).padding(.leading, 62)
+                            }
+                        }
+                    }
+                    .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+
+                if let fetchedAt = market.fetchedAt {
+                    Text("\(market.plugins.count) 个条目 · 目录更新于 \(fetchedAt.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.system(size: 10))
+                        .foregroundStyle(DSH.Palette.tertiary)
+                }
+            }
+        }
+    }
+
+    private var marketChips: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                chipButton("全部", key: "全部")
+                ForEach(market.categories, id: \.key) { item in
+                    chipButton(item.label, key: item.key)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private func chipButton(_ title: String, key: String) -> some View {
+        Button {
+            Haptics.tap()
+            marketCategory = key
+        } label: {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(marketCategory == key ? Color.black : DSH.Palette.secondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(marketCategory == key ? Color.white : DSH.Palette.surface, in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func marketRow(_ plugin: MarketPlugin) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(String(plugin.title.display.prefix(1)))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: 38, height: 38)
+                .background(Fluid.Palette.iceBlue.opacity(0.22), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(plugin.title.display)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Fluid.Palette.text)
+                        .lineLimit(1)
+                    Text(plugin.version)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Fluid.Palette.slate)
+                    Spacer(minLength: 4)
+                    Text(plugin.categoryLabel)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(Fluid.Palette.mist)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Fluid.Palette.graphite, in: Capsule())
+                }
+
+                Text(plugin.description?.display ?? "")
+                    .font(Fluid.Typography.caption)
+                    .foregroundStyle(Fluid.Palette.mist)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 12) {
+                    Button {
+                        UIPasteboard.general.string = "\(plugin.name)@\(plugin.version)"
+                        Haptics.tap()
+                        copiedPackage = plugin.id
+                        Task {
+                            try? await Task.sleep(nanoseconds: 1_400_000_000)
+                            if copiedPackage == plugin.id { copiedPackage = nil }
+                        }
+                    } label: {
+                        Text(copiedPackage == plugin.id ? "已复制" : "复制包名")
+                            .font(.system(size: 10, weight: .medium))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(copiedPackage == plugin.id ? Fluid.Palette.mint : Fluid.Palette.iceBlue)
+
+                    if let url = plugin.homepageURL {
+                        Link(destination: url) {
+                            Text("主页 ↗").font(.system(size: 10, weight: .medium))
+                        }
+                        .foregroundStyle(Fluid.Palette.iceBlue)
+                    }
+                }
+                .padding(.top, 2)
+            }
+        }
+        .padding(12)
     }
 
     private var categories: [String] {
