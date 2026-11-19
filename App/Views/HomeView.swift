@@ -207,7 +207,9 @@ struct HomeView: View {
 
     @ViewBuilder
     private var currentSession: some View {
-        if store.current != nil, let session = demo.heroSession {
+        // 之前这里要求「必须连着远端主机」，本机模式下首页永远不会出现「继续上次」。
+        // 会话本来就是 App 自己的状态，跟有没有远端无关。
+        if let session = demo.heroSession {
             VStack(alignment: .leading, spacing: 10) {
                 sectionTitle(session.isRunning ? "正在运行" : "继续上次")
 
