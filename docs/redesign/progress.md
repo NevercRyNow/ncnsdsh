@@ -125,3 +125,13 @@ Info.plist 与 SHA256。SwiftUI 的观感必须由人装在手机上确认。
   `CFBundleVersion = 12`，`MinimumOSVersion = 17.0`，可执行文件在包内。
 - 构建日志里 2.17.5 唯一的错误是 `WorkbenchView` 用了不存在的
   `Fluid.Palette.canvas` / `.raised`（应为 `.obsidian` / `.graphite`），2.17.6 已修。
+
+### 2026-11-19 上午：runner 恢复后的连续出包
+
+| 版本 | 提交 | 内容 | 校验 |
+| --- | --- | --- | --- |
+| 2.17.6 | `479d616` | 修 `WorkbenchView` 里两个不存在的 palette 名（`canvas`/`raised`） | 成功，`2.17.6 / 12` |
+| 2.17.7 | `8e6e1ff` | 旧 `Theme` 调色板也改成动态色（55 处调用点）；玻璃按钮不再写死白字；教程页文字跟随外观 | 成功，`2.17.7 / 13` |
+| 2.17.8 | `90d6b89` | 定时任务的开关从 `.constant()` 假开关改成真正写回 `DemoStore` | 成功，`2.17.8 / 14` |
+
+三个包的 SHA-256 都与 release 资产的 `digest` 一致，`Info.plist` 版本号解包核对过。
