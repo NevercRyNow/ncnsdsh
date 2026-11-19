@@ -75,7 +75,7 @@ struct BuildTutorialView: View {
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(Fluid.Palette.text)
             Text("不需要 Mac。GitHub 提供 macOS 机器，你只需要一个仓库和一个 Token。")
-                .font(.system(size: 13))
+                .font(DSH.TypeScale.footnote)
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -97,7 +97,7 @@ struct BuildTutorialView: View {
             }
 
             Text(step.body)
-                .font(.system(size: 13))
+                .font(DSH.TypeScale.footnote)
                 .lineSpacing(3)
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -153,7 +153,7 @@ struct BuildTutorialView: View {
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(Fluid.Palette.text.opacity(0.92))
             Text(body)
-                .font(.system(size: 12))
+                .font(DSH.TypeScale.caption)
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
         }

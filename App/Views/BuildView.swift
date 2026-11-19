@@ -114,14 +114,14 @@ struct BuildView: View {
 
             if case .failed(let reason) = build.phase {
                 Text(reason)
-                    .font(.system(size: 12))
+                    .font(DSH.TypeScale.caption)
                     .foregroundStyle(Color(hex: 0xFFB86B))
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let message = build.message {
                 Text(message)
-                    .font(.system(size: 12))
+                    .font(DSH.TypeScale.caption)
                     .foregroundStyle(Color(hex: 0xFFB86B))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -334,7 +334,7 @@ struct BuildView: View {
                 .foregroundStyle(Fluid.Palette.text)
 
             Text("细粒度 Token，权限只需要 Actions: Read and write、Contents: Read。只存在这台手机的钥匙串里。")
-                .font(.system(size: 12))
+                .font(DSH.TypeScale.caption)
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
 

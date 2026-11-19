@@ -63,6 +63,7 @@ struct ChatView: View {
                 } label: {
                     Image(systemName: "rectangle.3.group")
                 }
+                .accessibilityLabel("打开工作台")
             }
             ToolbarItem(placement: .principal) {
                 HStack(spacing: 6) {
@@ -296,7 +297,7 @@ struct ApprovalSheet: View {
                 .foregroundStyle(Fluid.Palette.text)
 
             Text(request.detail)
-                .font(.system(size: 14))
+                .font(DSH.TypeScale.footnote)
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
 

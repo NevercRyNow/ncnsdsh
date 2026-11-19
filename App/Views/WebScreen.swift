@@ -68,6 +68,7 @@ struct WebScreen: View {
                     if canGoBack { bridge.goBack() }
                 } label: {
                     Image(systemName: "chevron.left")
+                        .accessibilityLabel("后退")
                 }
                 .disabled(!canGoBack)
 
@@ -76,6 +77,7 @@ struct WebScreen: View {
                     if canGoForward { bridge.goForward() }
                 } label: {
                     Image(systemName: "chevron.right")
+                        .accessibilityLabel("前进")
                 }
                 .disabled(!canGoForward)
             }
@@ -109,6 +111,7 @@ struct WebScreen: View {
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
+                    .accessibilityLabel("更多操作")
             }
         }
     }
