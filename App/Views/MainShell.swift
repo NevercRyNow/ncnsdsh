@@ -124,35 +124,38 @@ struct MainShell: View {
                 .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.55), radius: 18, y: 8)
-        .scaleEffect(dockDragging ? 1.03 : 1)
-        .rotationEffect(.degrees(dockOffset.width / 90), anchor: .center)
+        .scaleEffect(dockDragging ? 1.02 : 1)
         .offset(x: dockOffset.width, y: dockOffset.height)
         .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         .zIndex(3)
+        .onTapGesture { expand(session) }
         .gesture(
-            DragGesture(minimumDistance: 0)
+            // minimumDistance 不能是 0：那会把点击也吞成拖动，还会和后面的滚动手势打架。
+            DragGesture(minimumDistance: 8)
                 .updating($dockDragging) { _, state, _ in
                     state = true
                 }
                 .onChanged { value in
                     // 跟手 + 橡皮筋：超过范围后按 1/3 缓动，不会硬停
+                    // 横移只给很小一段：这条是任务条，不是可以甩出去的卡片；
+                    // 旋转每帧重算阴影和模糊太贵，直接去掉。
                     dockOffset = CGSize(
-                        width: rubber(value.translation.width, limit: 110),
+                        width: rubber(value.translation.width, limit: 36),
                         height: rubber(min(0, value.translation.height), limit: 72)
                     )
                 }
                 .onEnded { value in
-                    let distance = hypot(value.translation.width, value.translation.height)
-                    if distance < 10 {
-                        expand(session)
-                    } else if value.translation.height < -52 {
-                        expand(session)
-                    }
-                    withAnimation(.spring(response: 0.38, dampingFraction: 0.62)) {
-                        dockOffset = .zero
-                    }
+                    if value.translation.height < -52 { expand(session) }
                 }
         )
+        // 手势结束或被系统打断时，@GestureState 一定会复位；靠这里回弹，
+        // 才不会出现「拖到一半松手/被打断，条子停在半空」。
+        .onChange(of: dockDragging) { _, dragging in
+            guard !dragging, dockOffset != .zero else { return }
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                dockOffset = .zero
+            }
+        }
     }
 
     /// 超出限制后按 1/3 阻尼拉伸，松手回弹。
