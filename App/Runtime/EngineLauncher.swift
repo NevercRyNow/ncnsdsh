@@ -36,6 +36,7 @@ final class EngineLauncher: ObservableObject {
 
     var runtimeVersion: String? { manifest?.runtimeVersion }
     var nodeVersion: String? { manifest?.nodeVersion }
+    var fileCount: Int? { manifest?.files.count }
 
     var isRunning: Bool {
         if case .running = phase { return true }
@@ -85,6 +86,15 @@ final class EngineLauncher: ObservableObject {
         } catch {
             phase = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
         }
+    }
+
+    /// 删掉已解出的 runtime 树，下次启动重新解一遍。用来处理「解压到一半」的状态。
+    func forgetRuntime() {
+        let fm = FileManager.default
+        try? fm.removeItem(at: support.appendingPathComponent("tree", isDirectory: true))
+        try? fm.removeItem(at: support.appendingPathComponent("version.txt"))
+        manifest = nil
+        phase = .idle
     }
 
     func stop() {

@@ -552,6 +552,12 @@ struct LocalRuntimeView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(engine.isRunning ? Fluid.Palette.coral : Fluid.Palette.iceBlue)
                     .disabled(!EngineBridge.shared.isReady && !engine.isRunning)
+
+                    if !engine.isRunning, engine.runtimeVersion != nil {
+                        Button("重装") { engine.forgetRuntime() }
+                            .font(.system(size: 11))
+                            .foregroundStyle(Fluid.Palette.slate)
+                    }
                 }
 
                 if case .installing(let progress) = engine.phase {
@@ -586,8 +592,10 @@ struct LocalRuntimeView: View {
         if !engine.archiveAvailable { return "这个包没有随附 runtime.zip。" }
         switch engine.phase {
         case .idle:
-            let runtime = engine.runtimeVersion ?? "未安装"
-            return "已嵌入 · runtime \(runtime) · 点「启动」解压并拉起引擎"
+            if let runtime = engine.runtimeVersion, let files = engine.fileCount {
+                return "已嵌入 · runtime \(runtime) · \(files) 个文件 · 点「启动」拉起引擎"
+            }
+            return "已嵌入 · 点「启动」解压 runtime 并拉起引擎"
         case .installing(let progress):
             return "解压 runtime.zip… \(Int(progress * 100))%"
         case .starting:
