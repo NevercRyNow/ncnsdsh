@@ -1,0 +1,41 @@
+NcnsDSH
+Copyright (C) 2026 郑壹鸣 (Zheng Yiming)
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+## Third-party components
+
+### dsh-Go (https://github.com/ccch1mneyyy/dsh-Go)
+
+The iOS engine integration (NodeMobile host, engine addons, optional iSH guest)
+is built from dsh-Go's iOS branch, which is licensed under AGPL-3.0. This
+repository was relicensed from MIT to AGPL-3.0 for that reason. The app's own
+SwiftUI sources remain by 郑壹鸣 and are distributed under the same AGPL-3.0.
+
+- Engine host / addons: `DshNodeHost.framework`, `DshFlock.framework`,
+  `DshRequireBuiltin.framework`
+- Optional Linux guest: `DshGuest.framework` (iSH upstream, GPL-family; its own
+  upstream licence travels with the binary)
+
+No dsh-Go source code is vendored here; the frameworks are produced by running
+their published tooling (`tooling/ios/prepare-engine.sh`, `build-engine-native.sh`,
+`embed-engine.sh`) against their repository at build time.
+
+### Plugin market data
+
+The plugin catalogue shown in-app comes from `ccch1mneyyy/dsh-go-market`
+(published index at https://go.dshtui.com/market/index.json). Only metadata is
+fetched and displayed; no plugin code is bundled, installed or executed by this
+app.
