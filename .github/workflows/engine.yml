@@ -42,7 +42,7 @@ jobs:
         run: |
           set -o pipefail
           cd dsh-go
-          ./tooling/ios/build-engine-native.sh 2>&1 | tee build.log
+          ./tooling/ios/build-engine-native.sh iphoneos 2>&1 | tee build.log
 
       - name: List what came out
         if: always()
