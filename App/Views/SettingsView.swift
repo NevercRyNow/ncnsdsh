@@ -170,6 +170,12 @@ struct SettingsView: View {
                     Button(item.label) { settings.language = item }
                 }
             }
+            divider
+            menuRow(icon: "cpu", title: "会话引擎", value: settings.engineChoice.label) {
+                ForEach(SettingsStore.EngineChoice.allCases) { item in
+                    Button(item.label) { settings.engineChoice = item }
+                }
+            }
         }
         .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }

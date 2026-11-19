@@ -104,6 +104,26 @@ final class SettingsStore: ObservableObject {
     @Published var silentAudio: Bool { didSet { save(); syncKeeper() } }
     @Published var keepRunning: Bool { didSet { save(); syncKeeper() } }
     @Published var showSessionTitles: Bool { didSet { save() } }
+    /// 新会话用哪条通道：直连 DeepSeek API，还是 App 内置的 dsh-go 引擎。
+    enum EngineChoice: String, CaseIterable, Identifiable {
+        case cloud
+        case embedded
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .cloud: return "云端 API"
+            case .embedded: return "内置引擎"
+            }
+        }
+        var detail: String {
+            switch self {
+            case .cloud: return "直连 api.deepseek.com，需要 API Key。"
+            case .embedded: return "用包里内置的 dsh-go 引擎（AGPL），不起网页。"
+            }
+        }
+    }
+
+    @Published var engineChoice: EngineChoice { didSet { save() } }
     @Published var appearance: Appearance { didSet { save() } }
     @Published var language: Language { didSet { save() } }
 
@@ -113,6 +133,7 @@ final class SettingsStore: ObservableObject {
         silentAudio = defaults.bool(forKey: "settings.silentAudio")
         keepRunning = defaults.bool(forKey: "settings.keepRunning")
         showSessionTitles = defaults.object(forKey: "settings.showSessionTitles") as? Bool ?? true
+        engineChoice = EngineChoice(rawValue: defaults.string(forKey: "settings.engine") ?? "") ?? .cloud
         appearance = Appearance(rawValue: defaults.string(forKey: "settings.appearance") ?? "") ?? .system
         language = Language(rawValue: defaults.string(forKey: "settings.language") ?? "") ?? .system
         syncKeeper()
@@ -122,6 +143,7 @@ final class SettingsStore: ObservableObject {
         defaults.set(silentAudio, forKey: "settings.silentAudio")
         defaults.set(keepRunning, forKey: "settings.keepRunning")
         defaults.set(showSessionTitles, forKey: "settings.showSessionTitles")
+        defaults.set(engineChoice.rawValue, forKey: "settings.engine")
         defaults.set(appearance.rawValue, forKey: "settings.appearance")
         defaults.set(language.rawValue, forKey: "settings.language")
     }

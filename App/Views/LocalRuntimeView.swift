@@ -20,7 +20,7 @@ struct LocalRuntimeView: View {
     @State private var pendingRemoval: Host?
     @State private var backups: [BackupInfo] = []
     @State private var restoreTarget: BackupInfo?
-    @StateObject private var engine = EngineLauncher()
+    @ObservedObject private var engine = EngineLauncher.shared
 
     private var running: Bool { settings.silentAudio || settings.keepRunning }
 

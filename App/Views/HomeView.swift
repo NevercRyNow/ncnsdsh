@@ -9,10 +9,15 @@ struct HomeView: View {
     @EnvironmentObject private var plugins: PluginStore
     @EnvironmentObject private var router: AppRouter
     @EnvironmentObject private var account: AccountStore
+    @EnvironmentObject private var settings: SettingsStore
 
-    @State private var showBuild = false
-    @State private var showAutomation = false
-    @State private var showWorkbench = false
+    /// 一个 sheet 入口，避免同一层挂四个 .sheet(isPresented:) 互相抢。
+    private enum Panel: String, Identifiable {
+        case build, automation, workbench, engine
+        var id: String { rawValue }
+    }
+
+    @State private var panel: Panel?
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -35,17 +40,20 @@ struct HomeView: View {
             .navigationDestination(for: Route.self) { route in
                 RouteDestination(route: route)
             }
-            .sheet(isPresented: $showBuild) {
-                BuildView()
-            }
-            .sheet(isPresented: $showAutomation) {
-                ScheduleView().environmentObject(demo)
-            }
-            .sheet(isPresented: $showWorkbench) {
-                WorkbenchView(sessionID: nil)
-                    .presentationDetents([.height(280), .medium, .large])
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground(Fluid.Palette.obsidian)
+            .sheet(item: $panel) { panel in
+                switch panel {
+                case .build:
+                    BuildView()
+                case .automation:
+                    ScheduleView().environmentObject(demo)
+                case .workbench:
+                    WorkbenchView(sessionID: nil)
+                        .presentationDetents([.height(280), .medium, .large])
+                        .presentationDragIndicator(.visible)
+                        .presentationBackground(Fluid.Palette.obsidian)
+                case .engine:
+                    EngineConsoleView()
+                }
             }
         }
     }
@@ -174,6 +182,12 @@ struct HomeView: View {
                 // 配了 API Key 就开真实会话（LocalStore + LocalEngine）；
                 // 没配才落到演示会话，演示会话的回复是脚本，不是模型生成的。
                 action("新建会话", "square.and.pencil") {
+                    // 设置里选了「内置引擎」就直接走引擎那条线，不再开网页也不再假装回复。
+                    if settings.engineChoice == .embedded {
+                        panel = .engine
+                        Task { await EngineLauncher.shared.start(workspace: AppFiles.workspace) }
+                        return
+                    }
                     if !account.key.isEmpty {
                         let id = local.createSession(model: account.selectedModel)
                         router.open(.localSession(id))
@@ -185,19 +199,19 @@ struct HomeView: View {
                 // 工作台三档：小卡 / 半屏 / 全屏，靠系统 detents 与拖拽手势，
                 // 不自己算逐帧位移（自己算的那套在玻璃容器里会卡）。
                 action("终端", "terminal") {
-                    showWorkbench = true
+                    panel = .workbench
                 }
                 action("文件", "folder") {
-                    showWorkbench = true
+                    panel = .workbench
                 }
                 action("构建", "hammer") {
-                    showBuild = true
+                    panel = .build
                 }
                 action("设备", "desktopcomputer") {
                     router.open(.devices)
                 }
                 action("自动化", "clock.arrow.circlepath") {
-                    showAutomation = true
+                    panel = .automation
                 }
             }
         }

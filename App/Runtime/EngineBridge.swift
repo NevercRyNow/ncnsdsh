@@ -135,6 +135,16 @@ final class EngineBridge {
         }
     }
 
+    /// 引擎排到的事件（JSON 数组文本），没有引擎时返回 nil。
+    func drain() -> String? {
+        guard let handle, let symbol = dlsym(handle, "dsh_host_drain") else { return nil }
+        typealias DrainFn = @convention(c) () -> UnsafeMutablePointer<CChar>?
+        let drain = unsafeBitCast(symbol, to: DrainFn.self)
+        guard let pointer = drain() else { return nil }
+        defer { freeFn?(pointer) }
+        return String(cString: pointer)
+    }
+
     /// 引擎当前的 JSON 状态（没有引擎或没启动时返回 nil）。
     func state() -> String? {
         guard let stateFn else { return nil }

@@ -14,6 +14,8 @@ final class EngineLauncher: ObservableObject {
         case failed(String)
     }
 
+    static let shared = EngineLauncher()
+
     @Published private(set) var phase: Phase = .idle
 
     private var installer: RuntimeInstaller?
@@ -101,6 +103,9 @@ final class EngineLauncher: ObservableObject {
         EngineBridge.shared.stop()
         phase = .idle
     }
+
+    /// 拉一次事件（dsh_host_drain），返回原始 JSON 文本。
+    func drain() -> String? { EngineBridge.shared.drain() }
 
     func refreshState() {
         guard isRunning, let state = EngineBridge.shared.state() else { return }
