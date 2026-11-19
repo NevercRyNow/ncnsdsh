@@ -16,8 +16,6 @@ struct MainShell: View {
     @EnvironmentObject private var chrome: AppChrome
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    @State private var expanded: UUID?
-    @Namespace private var miniNamespace
 
     private var liveSession: ChatSession? {
         demo.sessions.first { $0.isRunning }
@@ -44,33 +42,18 @@ struct MainShell: View {
             .sensoryFeedback(.selection, trigger: router.tab)
 
             if let session = liveSession, !chrome.chatOpen {
-                if expanded == session.id {
-                    ChatView(sessionID: session.id)
-                        .matchedGeometryEffect(id: "liveSession", in: miniNamespace)
-                        .transition(.opacity)
-                        .zIndex(2)
-                        .overlay(alignment: .topTrailing) {
-                            collapseButton
-                        }
-                } else {
-                    GlassGroup(spacing: 10) {
-                        miniBar(session)
-                    }
-                    .matchedGeometryEffect(id: "liveSession", in: miniNamespace)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 58)
-                    .zIndex(1)
+                GlassGroup(spacing: 10) {
+                    miniBar(session)
                 }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 58)
+                .zIndex(1)
             }
         }
-        .animation(DSH.Motion.flow, value: expanded)
         .background(DSH.Palette.canvas.ignoresSafeArea())
         .onChange(of: router.tab) { _, _ in
             chrome.chatOpen = false
             router.path = []
-        }
-        .onChange(of: demo.sessions.first(where: { $0.isRunning })?.id) { _, id in
-            if id == nil { expanded = nil }
         }
     }
 
@@ -145,28 +128,15 @@ struct MainShell: View {
         .accessibilityHint("轻点展开对话")
     }
 
+    /// 点浮条 = 打开这个会话。用的是普通的路由 push（带返回按钮的原生转场），
+    /// 不再把玻璃条 matchedGeometry 成整屏——那一下要在 GlassEffectContainer 里
+    /// 重算整块玻璃，真机上就是「点一下卡住」。
     private func expand(_ session: ChatSession) {
         Haptics.soft()
-        withAnimation(DSH.Motion.flow) {
-            expanded = session.id
+        if router.tab != .home { router.tab = .home }
+        DispatchQueue.main.async {
+            router.path = [.session(session.id)]
         }
     }
 
-    private var collapseButton: some View {
-        Button {
-            Haptics.soft()
-            withAnimation(DSH.Motion.flow) {
-                expanded = nil
-            }
-        } label: {
-            Image(systemName: "chevron.down")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(DSH.Palette.text)
-                .frame(width: 32, height: 32)
-                .background(.regularMaterial, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .padding(.trailing, 16)
-        .padding(.top, 8)
-    }
 }
