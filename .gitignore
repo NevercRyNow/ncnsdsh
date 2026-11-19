@@ -12,3 +12,4 @@ docs/design/.drawai-cache/
 
 # 内置引擎产物（CI 生成，含 45MB runtime，不进仓库）
 Engine/
+.engine-src/

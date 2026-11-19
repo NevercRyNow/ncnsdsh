@@ -23,31 +23,33 @@ targets:
       - path: App
         excludes:
           - "Info.plist"
-      # 内置引擎（dsh-Go iOS 分支，AGPL-3.0，见 NOTICE）：CI 在 xcodegen 之前把这些产物
-      # 放进 Engine/。optional 保证没有引擎的本地构建也能生成工程，只是 App 里报「未嵌入」。
-      - path: Engine/Frameworks/DshNodeHost.framework
-        optional: true
-        embed: true
-        buildPhase: none
-      - path: Engine/Frameworks/DshFlock.framework
-        optional: true
-        embed: true
-        buildPhase: none
-      - path: Engine/Frameworks/DshRequireBuiltin.framework
-        optional: true
-        embed: true
-        buildPhase: none
       - path: Engine/runtime.zip
         optional: true
         buildPhase: resources
+    # 内置引擎（dsh-Go iOS 分支，AGPL-3.0，见 NOTICE）。CI 在 xcodegen 之前把产物放进
+    # Engine/；这里用 dependencies 才会进 Embed Frameworks（sources 的 embed 不生效）。
+    # 没有 Engine/ 时 xcodegen 会失败——先跑 tools/stage-engine.sh。
+    dependencies:
+      - framework: Engine/Frameworks/DshNodeHost.framework
+        embed: true
+        codeSign: false
+      - framework: Engine/Frameworks/DshFlock.framework
+        embed: true
+        codeSign: false
+      - framework: Engine/Frameworks/DshRequireBuiltin.framework
+        embed: true
+        codeSign: false
+      - framework: Engine/NodeMobile.xcframework
+        embed: true
+        codeSign: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nevercrynow.ncnsdsh
         INFOPLIST_FILE: App/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         PRODUCT_NAME: NcnsDSH
-        MARKETING_VERSION: "2.23.0"
-        CURRENT_PROJECT_VERSION: "38"
+        MARKETING_VERSION: "2.23.1"
+        CURRENT_PROJECT_VERSION: "39"
         TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

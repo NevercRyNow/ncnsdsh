@@ -40,6 +40,7 @@ jobs:
           ./tooling/ios/build-engine-native.sh iphoneos "$PWD/build/engine"
           mkdir -p "$GITHUB_WORKSPACE/Engine/Frameworks"
           cp -R build/engine/*.framework "$GITHUB_WORKSPACE/Engine/Frameworks/"
+          cp -R app/ios/Engine/NodeMobile.xcframework "$GITHUB_WORKSPACE/Engine/" || true
           cp app/ios/Engine/runtime.zip "$GITHUB_WORKSPACE/Engine/" || true
           ls -la "$GITHUB_WORKSPACE/Engine" "$GITHUB_WORKSPACE/Engine/Frameworks"
 
