@@ -50,15 +50,29 @@ struct MoreView: View {
                     row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) { showAbout = true }
                 }
 
-                Text("NcnsDSH · 由郑壹鸣设计与开发")
-                    .font(DSH.TypeScale.footnote)
-                    .foregroundStyle(DSH.Palette.tertiary)
-                    .padding(.horizontal, 4)
-                    .padding(.top, 2)
+                // 署名往上提、放大一点：它原来是行小灰字，正好被运行中的浮条压住。
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("NcnsDSH")
+                        .font(.system(size: 19, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Fluid.Palette.text)
+                    HStack(spacing: 6) {
+                        Text("由郑壹鸣设计与开发")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Fluid.Palette.mist)
+                        Text("MIT")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(Fluid.Palette.slate)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Fluid.Palette.graphite, in: Capsule())
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.top, 10)
             }
             .padding(.horizontal, DSH.Inset.gutter)
             .padding(.top, 8)
-            .padding(.bottom, 40)
+            .padding(.bottom, bottomInset)
         }
         .scrollIndicators(.hidden)
         .background(DSH.Palette.canvas)
@@ -106,6 +120,12 @@ struct MoreView: View {
             .fill(DSH.Palette.hairline)
             .frame(height: 0.5)
             .padding(.leading, 54)
+    }
+
+    /// 有运行中的会话时，底部会浮一条 52pt 的任务条（距底 58pt），
+    /// 这一页的内容要让出这段，否则署名就被压在浮条下面。
+    private var bottomInset: CGFloat {
+        demo.sessions.contains(where: \.isRunning) ? 138 : 56
     }
 
     private func sectionTitle(_ text: String) -> some View {
