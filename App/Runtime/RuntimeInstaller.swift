@@ -55,14 +55,14 @@ struct RuntimeArchive {
     private static let maxFile = 512 * 1024 * 1024
 
     init(url: URL) throws {
-        bytes = try Data(contentsOf: url, options: .alwaysMapped)
-        guard bytes.count >= 22 else { throw RuntimeArchiveError.invalid("文件太短") }
+        let data = try Data(contentsOf: url, options: .alwaysMapped)
+        guard data.count >= 22 else { throw RuntimeArchiveError.invalid("文件太短") }
 
-        func u16(_ at: Int) -> Int { Int(bytes[at]) | Int(bytes[at + 1]) << 8 }
+        func u16(_ at: Int) -> Int { Int(data[at]) | Int(data[at + 1]) << 8 }
         func u32(_ at: Int) -> Int { u16(at) | u16(at + 2) << 16 }
 
         // EOCD 紧贴文件末尾（生成器不写注释）。
-        let footer = bytes.count - 22
+        let footer = data.count - 22
         guard u32(footer) == 0x0605_4b50 else { throw RuntimeArchiveError.invalid("找不到中央目录") }
         let count = u16(footer + 10)
         let directoryOffset = u32(footer + 16)
@@ -81,7 +81,7 @@ struct RuntimeArchive {
             let nameLength = u16(cursor + 28)
             let headerOffset = u32(cursor + 42)
             guard nameLength > 0, size <= RuntimeArchive.maxFile,
-                  let name = String(data: bytes[(cursor + 46)..<(cursor + 46 + nameLength)], encoding: .utf8),
+                  let name = String(data: data[(cursor + 46)..<(cursor + 46 + nameLength)], encoding: .utf8),
                   entries[name] == nil, !name.contains(".."), !name.hasPrefix("/")
             else { throw RuntimeArchiveError.invalid("条目名不合法") }
 
@@ -103,10 +103,11 @@ struct RuntimeArchive {
         }
 
         guard let first = entries["manifest.json"] else { throw RuntimeArchiveError.invalid("缺少清单") }
-        let manifestData = bytes[first.dataOffset..<(first.dataOffset + first.size)]
+        let manifestData = data[first.dataOffset..<(first.dataOffset + first.size)]
         guard let manifest = try? JSONDecoder().decode(RuntimeManifest.self, from: manifestData),
               manifest.isValid
         else { throw RuntimeArchiveError.invalid("清单解析失败") }
+        self.bytes = data
         self.manifest = manifest
         self.entries = entries
     }
