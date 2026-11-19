@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import Foundation
 
 struct ChatView: View {
@@ -147,7 +148,7 @@ private struct MessageRow: View {
                     Text(message.text)
                         .font(DSH.TypeScale.body)
                         .lineSpacing(5)
-                        .foregroundStyle(.white.opacity(0.94))
+                        .foregroundStyle(Fluid.Palette.text.opacity(0.94))
                         .textSelection(.enabled)
                 }
 
@@ -162,6 +163,16 @@ private struct MessageRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contextMenu {
+                if !message.text.isEmpty {
+                    Button {
+                        UIPasteboard.general.string = message.text
+                        Haptics.tap()
+                    } label: {
+                        Label("复制", systemImage: "doc.on.doc")
+                    }
+                }
+            }
         }
     }
 }
@@ -189,7 +200,7 @@ private struct ToolRow: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(tool.name)
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.92))
+                            .foregroundStyle(Fluid.Palette.text.opacity(0.92))
                         Text(tool.detail)
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundStyle(Theme.muted)
@@ -216,7 +227,7 @@ private struct ToolRow: View {
             if expanded {
                 Text(tool.output.isEmpty ? "（还没有输出）" : tool.output)
                     .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.72))
+                    .foregroundStyle(Fluid.Palette.text.opacity(0.72))
                     .padding(.horizontal, 12)
                     .padding(.bottom, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -276,7 +287,7 @@ struct ApprovalSheet: View {
 
             Text(request.title)
                 .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
 
             Text(request.detail)
                 .font(.system(size: 14))
@@ -285,7 +296,7 @@ struct ApprovalSheet: View {
 
             Text(request.command)
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(Fluid.Palette.text.opacity(0.9))
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

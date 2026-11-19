@@ -105,7 +105,7 @@ struct SectionHeader: View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
             Spacer()
             if let actionTitle, let action {
                 Button(actionTitle, action: action)

@@ -63,7 +63,7 @@ struct BuildView: View {
                     .foregroundStyle(build.hasToken ? Theme.mint : Theme.accent)
                 Text(build.hasToken ? (build.login.map { "已连接 @\($0)" } ?? "Token 已验证") : "还没连 GitHub")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(Fluid.Palette.text.opacity(0.85))
                 Spacer()
                 Button(build.hasToken ? "换 Token" : "连接") {
                     tokenInput = ""
@@ -96,7 +96,7 @@ struct BuildView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(statusTitle)
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Fluid.Palette.text)
                     Text(statusDetail)
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.muted)
@@ -135,7 +135,7 @@ struct BuildView: View {
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
                                 .background(Theme.mint.opacity(0.20), in: Capsule())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Fluid.Palette.text)
                         }
                         Text(byteText(artifact.size))
                             .font(.system(size: 11, design: .monospaced))
@@ -158,7 +158,7 @@ struct BuildView: View {
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 10)
                                 .background(Theme.mint.opacity(0.20), in: Capsule())
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Fluid.Palette.text)
                         }
                         .buttonStyle(.plain)
                     }
@@ -272,7 +272,7 @@ struct BuildView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.system(size: 13, design: .monospaced))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -331,7 +331,7 @@ struct BuildView: View {
 
             Text("GitHub Token")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
 
             Text("细粒度 Token，权限只需要 Actions: Read and write、Contents: Read。只存在这台手机的钥匙串里。")
                 .font(.system(size: 12))
@@ -342,7 +342,7 @@ struct BuildView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .font(.system(size: 13, design: .monospaced))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .ncnsGlass(cornerRadius: 12, interactive: true)

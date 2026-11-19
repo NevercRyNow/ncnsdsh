@@ -55,7 +55,7 @@ struct ConnectView: View {
 
             Text("NcnsDSH")
                 .font(.system(size: 40, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
 
             Text("把手机接到那台正在跑 `dsh web` 的电脑。\n会话、工具和审批都在它那里执行。")
                 .font(.system(size: 15))
@@ -81,7 +81,7 @@ struct ConnectView: View {
                     .onSubmit { focused = .token }
                     .focused($focused, equals: .address)
                     .font(.system(size: 16, design: .monospaced))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Fluid.Palette.text)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
@@ -109,7 +109,7 @@ struct ConnectView: View {
                     .onSubmit(connect)
                     .focused($focused, equals: .token)
                     .font(.system(size: 16, design: .monospaced))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Fluid.Palette.text)
 
                     Button {
                         revealToken.toggle()
@@ -204,7 +204,7 @@ struct ConnectView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(host.displayName)
                                         .font(.system(size: 15, weight: .semibold))
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(Fluid.Palette.text)
                                         .lineLimit(1)
                                     Text(host.originText)
                                         .font(.system(size: 11, design: .monospaced))
