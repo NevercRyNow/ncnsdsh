@@ -29,6 +29,20 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Build dsh-Go engine (AGPL-3.0, see NOTICE)
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch ios/shared-runtime-after-ohos \
+            https://github.com/ccch1mneyyy/dsh-Go.git dsh-go
+          cd dsh-go
+          ./tooling/ios/prepare-engine.sh
+          mkdir -p build/engine
+          ./tooling/ios/build-engine-native.sh iphoneos "$PWD/build/engine"
+          mkdir -p "$GITHUB_WORKSPACE/Engine/Frameworks"
+          cp -R build/engine/*.framework "$GITHUB_WORKSPACE/Engine/Frameworks/"
+          cp app/ios/Engine/runtime.zip "$GITHUB_WORKSPACE/Engine/" || true
+          ls -la "$GITHUB_WORKSPACE/Engine" "$GITHUB_WORKSPACE/Engine/Frameworks"
+
       - name: Generate Xcode project
         run: xcodegen generate
 

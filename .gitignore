@@ -9,3 +9,6 @@ SHA256.txt
 # DrawAI 视频工程（含 70MB+ 字体，不进仓库）
 docs/design/.drawai-motion/
 docs/design/.drawai-cache/
+
+# 内置引擎产物（CI 生成，含 45MB runtime，不进仓库）
+Engine/

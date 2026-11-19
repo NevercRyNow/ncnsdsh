@@ -266,10 +266,28 @@ struct LocalRuntimeView: View {
                     "远程运行时",
                     "需要在主机上运行 dsh web --host 0.0.0.0，再把地址与 token 填进来。"
                 )
+                capabilityRow(
+                    "shippingbox",
+                    "内置引擎",
+                    engineStatusLine
+                )
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fluidSurface()
+        }
+    }
+
+    /// 内置引擎（dsh-Go iOS host）的真实加载结果，不是宣传文案：
+    /// 没打进包就说没打进，打进但符号缺失就把 dlopen 的原因原样贴出来。
+    private var engineStatusLine: String {
+        switch EngineBridge.shared.status {
+        case .notBundled:
+            return "这个包没有内置引擎，只能连远程主机。"
+        case .loaded(let version):
+            return "已嵌入 · DshNodeHost \(version)"
+        case .failed(let reason):
+            return reason
         }
     }
 
