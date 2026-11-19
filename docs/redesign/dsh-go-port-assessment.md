@@ -70,3 +70,16 @@ NodeMobile 是预编译的 iOS framework（不是 Swift Package），iSH 也是 
   且需要预编译 framework 与真机验证，本环境不具备。
 - 可以马上做：引擎抽象层（§3.1）；插件市场（已完成，见 2.19.0）。
 - 需要你回答：**许可证要不要改成 AGPL-3.0**；以及是否接受随包分发 NodeMobile/iSH 的二进制。
+
+## 5. 已做的第一段（clean-room，不涉及 AGPL）
+
+按它公开的 `docs/design/bridge-contract.md`，在 Swift 里自己实现了桥客户端的第一段：
+
+- `App/Runtime/DshBridge.swift`：`GET {host}/dsh-go/v1/capabilities`，
+  解析 `{v, bridge, capabilities}`；`v != 1` 报不支持；404 且 `error.code == route-not-found`
+  视为旧桥；401/403 先重试 Bearer，再如实报 token 被拒。
+- `App/Views/DevicesView.swift`：连上主机后自动协商一次，显示
+  「协议 v1 · bridge 0.4.0 · N 项能力」，失败显示具体原因并给重试。
+
+这不是「移植它的代码」——协议是对外契约，客户端按契约独立实现；AGPL 的部分（引擎、
+NodeMobile、iSH）仍然没有引入。

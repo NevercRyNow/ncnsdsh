@@ -4,10 +4,17 @@ import SwiftUI
 struct DevicesView: View {
     @EnvironmentObject private var store: HostStore
     @State private var showConnect = false
+    @State private var bridge: BridgeCapabilities?
+    @State private var bridgeError: String?
+    @State private var probing = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                if store.current != nil {
+                    bridgeCard
+                }
+
                 if store.hosts.isEmpty {
                     EmptyStateView(
                         symbol: "desktopcomputer",
@@ -53,6 +60,57 @@ struct DevicesView: View {
         .sheet(isPresented: $showConnect) {
             ConnectView().environmentObject(store)
         }
+        .task(id: store.current?.id) {
+            guard let host = store.current else { return }
+            await probe(host)
+        }
+    }
+
+    /// 原生桥协商：问一次 `/dsh-go/v1/capabilities`。
+    /// 这不是猜——协议按 dsh-go 的公开契约实现，拿不到就如实说拿不到。
+    private var bridgeCard: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: bridge != nil ? "checkmark.seal.fill" : (probing ? "hourglass" : "exclamationmark.triangle.fill"))
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(bridge != nil ? Fluid.Palette.mint : (probing ? Fluid.Palette.mist : Fluid.Palette.amber))
+                .frame(width: 34, height: 34)
+                .background((bridge != nil ? Fluid.Palette.mint : Fluid.Palette.amber).opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(bridge != nil ? "原生桥可用" : (probing ? "正在协商协议…" : "原生桥不可用"))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Fluid.Palette.text)
+                Text(bridge.map { "协议 v\($0.protocolVersion) · bridge \($0.bridgeVersion) · \($0.capabilities.count) 项能力" } ?? bridgeError ?? "")
+                    .font(Fluid.Typography.caption)
+                    .foregroundStyle(Fluid.Palette.mist)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 8)
+
+            if !probing, let host = store.current {
+                Button("重试") {
+                    Task { await probe(host) }
+                }
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Fluid.Palette.iceBlue)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fluidSurface()
+    }
+
+    private func probe(_ host: Host) async {
+        probing = true
+        bridge = nil
+        bridgeError = nil
+        do {
+            bridge = try await DshBridge.capabilities(for: host)
+        } catch {
+            bridgeError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+        probing = false
     }
 
     private func row(_ host: Host) -> some View {
