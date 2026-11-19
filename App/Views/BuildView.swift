@@ -10,22 +10,24 @@ struct BuildView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 20) {
                     header
+                    // 顺序按「现在怎么样 → 这次跑到哪 → 能做什么 → 以前跑过什么 → 仓库配置」
+                    // 排，原来是状态、历史、步骤、配置、操作五块来回跳。
                     statusCard
-                    recentCard
                     if !build.steps.isEmpty {
                         stepsCard
                     }
-                    repoCard
                     actions
+                    recentCard
+                    repoCard
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
             .scrollIndicators(.hidden)
-            .background(DSH.Palette.canvas)
+            .background(Fluid.Palette.obsidian)
             .navigationTitle("构建")
             .navigationBarTitleDisplayMode(.large)
             .task { await build.loadRecent() }
@@ -454,29 +456,29 @@ struct BuildView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "shippingbox")
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(DSH.Palette.accent)
+                                .foregroundStyle(Fluid.Palette.iceBlue)
                                 .frame(width: 28, height: 28)
-                                .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .background(Fluid.Palette.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(record.name)
                                     .font(.system(size: 12, design: .monospaced))
-                                    .foregroundStyle(DSH.Palette.text)
+                                    .foregroundStyle(Fluid.Palette.text)
                                     .lineLimit(1)
                                 Text("\(record.tag) · \(dateText(record.date))")
                                     .font(.system(size: 10))
-                                    .foregroundStyle(DSH.Palette.tertiary)
+                                    .foregroundStyle(Fluid.Palette.slate)
                             }
 
                             Spacer(minLength: 6)
 
                             Text(byteText(record.size))
                                 .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(DSH.Palette.tertiary)
+                                .foregroundStyle(Fluid.Palette.slate)
 
                             Image(systemName: "arrow.down.circle")
                                 .font(.system(size: 14))
-                                .foregroundStyle(DSH.Palette.accent)
+                                .foregroundStyle(Fluid.Palette.iceBlue)
                         }
                         .padding(.vertical, 7)
                         .contentShape(Rectangle())
@@ -486,7 +488,7 @@ struct BuildView: View {
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(Fluid.Palette.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
     }
 
