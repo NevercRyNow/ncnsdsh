@@ -53,7 +53,7 @@ struct SettingsView: View {
             ConnectView().environmentObject(store)
         }
         .sheet(isPresented: $showPlugins) {
-            PluginsView().environmentObject(plugins)
+            PluginsView().environmentObject(plugins).environmentObject(store)
         }
         .sheet(isPresented: $showAutomation) {
             ScheduleView().environmentObject(demo)

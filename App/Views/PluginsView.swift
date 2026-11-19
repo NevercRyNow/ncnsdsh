@@ -3,6 +3,7 @@ import UIKit
 
 struct PluginsView: View {
     @EnvironmentObject private var store: PluginStore
+    @EnvironmentObject private var hosts: HostStore
     @StateObject private var market = MarketStore()
 
     enum Segment: String, CaseIterable {
@@ -16,6 +17,9 @@ struct PluginsView: View {
     @State private var installing: Set<String> = []
     @State private var marketCategory = "全部"
     @State private var copiedPackage: String?
+    @State private var webHost: Host?
+    @State private var showNeedHost = false
+    @State private var pendingInstall: MarketPlugin?
 
     var body: some View {
         NavigationStack {
@@ -65,6 +69,19 @@ struct PluginsView: View {
             }
             .scrollIndicators(.hidden)
             .background(DSH.Palette.canvas)
+            .sheet(item: $webHost) { host in
+                WebScreen(host: host)
+            }
+            .alert("安装要在主机上完成", isPresented: $showNeedHost) {
+                Button("复制包名") {
+                    if let plugin = pendingInstall {
+                        UIPasteboard.general.string = "\(plugin.name)@\(plugin.version)"
+                    }
+                }
+                Button("好", role: .cancel) {}
+            } message: {
+                Text("插件跑在 DSH 主机上，App 不能替你安装。先在「更多 → 设备」连一台主机，之后按「安装」会直接打开那台机器的 DSH。")
+            }
             .navigationTitle("插件")
             .navigationBarTitleDisplayMode(.large)
             .task(id: segment) {
@@ -193,7 +210,31 @@ struct PluginsView: View {
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    // 安装这件事属于主机上的 DSH，App 只是客户端：
+                    // 有主机就打开主机的 DSH 页面去装，没有主机就说明清楚并给出包名。
+                    Button {
+                        Haptics.tap()
+                        if let host = hosts.current {
+                            webHost = host
+                        } else {
+                            pendingInstall = plugin
+                            showNeedHost = true
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text("安装")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Fluid.Palette.iceBlue, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+
                     Button {
                         UIPasteboard.general.string = "\(plugin.name)@\(plugin.version)"
                         Haptics.tap()
@@ -205,16 +246,18 @@ struct PluginsView: View {
                     } label: {
                         Text(copiedPackage == plugin.id ? "已复制" : "复制包名")
                             .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(copiedPackage == plugin.id ? Fluid.Palette.mint : Fluid.Palette.mist)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(copiedPackage == plugin.id ? Fluid.Palette.mint : Fluid.Palette.iceBlue)
 
                     if let url = plugin.homepageURL {
                         Link(destination: url) {
                             Text("主页 ↗").font(.system(size: 10, weight: .medium))
                         }
-                        .foregroundStyle(Fluid.Palette.iceBlue)
+                        .foregroundStyle(Fluid.Palette.mist)
                     }
+
+                    Spacer(minLength: 0)
                 }
                 .padding(.top, 2)
             }

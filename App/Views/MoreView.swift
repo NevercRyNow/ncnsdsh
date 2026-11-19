@@ -79,7 +79,7 @@ struct MoreView: View {
         .navigationTitle("更多")
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showPlugins) {
-            PluginsView().environmentObject(plugins)
+            PluginsView().environmentObject(plugins).environmentObject(store)
         }
         .sheet(isPresented: $showAutomations) {
             ScheduleView().environmentObject(demo)
