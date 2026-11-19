@@ -97,6 +97,40 @@ final class EngineBridge {
         return false
     }
 
+    /// 启动引擎。路径语义与 dsh-Go 的 `EngineChannel.begin` 一致：
+    /// runtime 是解出来的 runtime 树，frameworks 由 Bundle 提供，workspace 是会话可写的根。
+    func start(runtime: URL, guest: URL?, home: URL, cache: URL, workspace: URL) -> Result<Void, String> {
+        guard let startFn, let frameworks = Bundle.main.privateFrameworksPath else {
+            return .failure("引擎未加载")
+        }
+        var code: UnsafeMutablePointer<CChar>?
+        var message: UnsafeMutablePointer<CChar>?
+        let guestPath = guest?.path ?? ""
+
+        let result = frameworks.withCString { fw in
+            runtime.path.withCString { rt in
+                guestPath.withCString { gr in
+                    home.path.withCString { hm in
+                        cache.path.withCString { ca in
+                            workspace.path.withCString { ws in
+                                startFn(rt, gr, hm, ca, fw, ws, 0, nil, nil, &code, &message)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if result != 0 {
+            let reason = message.map { String(cString: $0) } ?? "启动失败"
+            let id = code.map { String(cString: $0) } ?? "ios_native_start"
+            free(code)
+            free(message)
+            return .failure("\(id)：\(reason)")
+        }
+        return .success(())
+    }
+
     /// 引擎当前的 JSON 状态（没有引擎或没启动时返回 nil）。
     func state() -> String? {
         guard let stateFn else { return nil }

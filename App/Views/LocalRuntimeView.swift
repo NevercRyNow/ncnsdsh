@@ -19,6 +19,7 @@ struct LocalRuntimeView: View {
     @State private var pendingRemoval: Host?
     @State private var backups: [BackupInfo] = []
     @State private var restoreTarget: BackupInfo?
+    @StateObject private var engine = EngineLauncher()
 
     private var running: Bool { settings.silentAudio || settings.keepRunning }
 
@@ -31,6 +32,7 @@ struct LocalRuntimeView: View {
                     autoStart
                     runtimeSection
                     capabilitySection
+                    engineSection
                     environment
                     linuxSection
                     logCard
@@ -512,6 +514,88 @@ struct LocalRuntimeView: View {
             }
             .frame(height: 180)
             .background(Color(white: 0.04), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+    }
+
+    /// 内置引擎：真的解 runtime、真的调 dsh_host_start，状态取自 dsh_host_state()。
+    private var engineSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("内置引擎")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Fluid.Palette.slate)
+                .textCase(.uppercase)
+                .tracking(1.1)
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    Image(systemName: engine.isRunning ? "bolt.horizontal.circle.fill" : "bolt.horizontal.circle")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(engine.isRunning ? Fluid.Palette.mint : Fluid.Palette.slate)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(engineTitle)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Fluid.Palette.text)
+                        Text(engineDetail)
+                            .font(Fluid.Typography.caption)
+                            .foregroundStyle(Fluid.Palette.mist)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 6)
+                    Button(engine.isRunning ? "停止" : "启动") {
+                        if engine.isRunning {
+                            engine.stop()
+                        } else {
+                            Task { await engine.start(workspace: AppFiles.workspace) }
+                        }
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(engine.isRunning ? Fluid.Palette.coral : Fluid.Palette.iceBlue)
+                    .disabled(!EngineBridge.shared.isReady && !engine.isRunning)
+                }
+
+                if case .installing(let progress) = engine.phase {
+                    ProgressView(value: max(0.05, progress))
+                        .tint(Fluid.Palette.iceBlue)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fluidSurface()
+        }
+    }
+
+    private var engineTitle: String {
+        switch engine.phase {
+        case .idle: return "未启动"
+        case .installing: return "正在安装运行时"
+        case .starting: return "正在启动"
+        case .running: return "运行中"
+        case .failed: return "启动失败"
+        }
+    }
+
+    private var engineDetail: String {
+        if !EngineBridge.shared.isReady {
+            switch EngineBridge.shared.status {
+            case .notBundled: return "这个包没有内置引擎二进制（远程专用包）。"
+            case .failed(let reason): return reason
+            case .loaded: break
+            }
+        }
+        if !engine.archiveAvailable { return "这个包没有随附 runtime.zip。" }
+        switch engine.phase {
+        case .idle:
+            let runtime = engine.runtimeVersion ?? "未安装"
+            return "已嵌入 · runtime \(runtime) · 点「启动」解压并拉起引擎"
+        case .installing(let progress):
+            return "解压 runtime.zip… \(Int(progress * 100))%"
+        case .starting:
+            return "正在调用 dsh_host_start"
+        case .running(let state):
+            return state
+        case .failed(let reason):
+            return reason
         }
     }
 
