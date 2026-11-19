@@ -72,7 +72,7 @@ struct MoreView: View {
             }
             .padding(.horizontal, DSH.Inset.gutter)
             .padding(.top, 8)
-            .padding(.bottom, bottomInset)
+            .padding(.bottom, 56)
         }
         .scrollIndicators(.hidden)
         .background(DSH.Palette.canvas)
@@ -120,12 +120,6 @@ struct MoreView: View {
             .fill(DSH.Palette.hairline)
             .frame(height: 0.5)
             .padding(.leading, 54)
-    }
-
-    /// 有运行中的会话时，底部会浮一条 52pt 的任务条（距底 58pt），
-    /// 这一页的内容要让出这段，否则署名就被压在浮条下面。
-    private var bottomInset: CGFloat {
-        demo.sessions.contains(where: \.isRunning) ? 138 : 56
     }
 
     private func sectionTitle(_ text: String) -> some View {

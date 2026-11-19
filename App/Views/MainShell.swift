@@ -40,6 +40,11 @@ struct MainShell: View {
             }
             .tint(DSH.Palette.accent)
             .sensoryFeedback(.selection, trigger: router.tab)
+            // 运行中的浮条会压住页面最后一段内容（更多页的签名、首页的活动列表都中过招）。
+            // 在 TabView 上统一让出这段高度，各个页面不用各自打补丁。
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: (liveSession != nil && !chrome.chatOpen) ? 64 : 0)
+            }
 
             if let session = liveSession, !chrome.chatOpen {
                 GlassGroup(spacing: 10) {
