@@ -85,6 +85,9 @@ struct HomeView: View {
                 separator
                 metric("\(plugins.installed.count)", "插件", tint: Fluid.Palette.mist)
             }
+            // 读屏念一句「运行中 2，构建 5，插件 3」，而不是六个独立数字和标签。
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("运行中 \(demo.runningCount)，构建 \(build.recent.count)，插件 \(plugins.installed.count)")
         }
         .padding(16)
         .fluidSurface(cornerRadius: Fluid.Shape.panel)

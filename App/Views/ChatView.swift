@@ -8,6 +8,7 @@ struct ChatView: View {
     @EnvironmentObject private var demo: DemoStore
     @EnvironmentObject private var chrome: AppChrome
     @EnvironmentObject private var account: AccountStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var draft = ""
     @State private var showModelPicker = false
     @State private var showWorkbench = false
@@ -28,10 +29,12 @@ struct ChatView: View {
                     ForEach(messages) { message in
                         MessageRow(message: message)
                             .id(message.id)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .opacity
-                            ))
+                            .transition(reduceMotion
+                                ? .opacity
+                                : .asymmetric(
+                                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                                    removal: .opacity
+                                  ))
                     }
                     .animation(Motion.panel, value: messages.count)
 

@@ -10,6 +10,7 @@ struct LocalChatView: View {
     @EnvironmentObject private var config: ModelConfigurationStore
     @EnvironmentObject private var chrome: AppChrome
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var draft = ""
     @State private var showModelPicker = false
@@ -42,10 +43,12 @@ struct LocalChatView: View {
                     ForEach(messages) { message in
                         LocalMessageRow(message: message)
                             .id(message.id)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .opacity
-                            ))
+                            .transition(reduceMotion
+                                ? .opacity
+                                : .asymmetric(
+                                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                                    removal: .opacity
+                                  ))
                     }
                     .animation(Motion.panel, value: messages.count)
 
