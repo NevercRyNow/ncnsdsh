@@ -94,7 +94,7 @@ struct ChatView: View {
             // 用系统的 detents 和拖拽手势，不自己算逐帧位移——自己算的那套在
             // 玻璃容器里会卡，这一条已经踩过一次。
             WorkbenchView(sessionID: sessionID)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.height(280), .medium, .large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Fluid.Palette.obsidian)
         }

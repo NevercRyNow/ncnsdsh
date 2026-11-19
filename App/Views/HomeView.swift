@@ -12,6 +12,7 @@ struct HomeView: View {
 
     @State private var showBuild = false
     @State private var showAutomation = false
+    @State private var showWorkbench = false
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -39,6 +40,12 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showAutomation) {
                 ScheduleView().environmentObject(demo)
+            }
+            .sheet(isPresented: $showWorkbench) {
+                WorkbenchView(sessionID: nil)
+                    .presentationDetents([.height(280), .medium, .large])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(Fluid.Palette.obsidian)
             }
         }
     }
@@ -168,11 +175,13 @@ struct HomeView: View {
                     demo.newSession()
                     if let id = demo.activeSessionID { router.open(.session(id)) }
                 }
+                // 工作台三档：小卡 / 半屏 / 全屏，靠系统 detents 与拖拽手势，
+                // 不自己算逐帧位移（自己算的那套在玻璃容器里会卡）。
                 action("终端", "terminal") {
-                    router.tab = .workbench
+                    showWorkbench = true
                 }
                 action("文件", "folder") {
-                    router.tab = .workbench
+                    showWorkbench = true
                 }
                 action("构建", "hammer") {
                     showBuild = true
