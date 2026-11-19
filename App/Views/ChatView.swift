@@ -86,7 +86,13 @@ struct ChatView: View {
         }
         .onDisappear { chrome.chatOpen = false }
         .sheet(isPresented: $showWorkbench) {
+            // 工作台两档：半屏（Compact）和全屏（Expanded）。
+            // 用系统的 detents 和拖拽手势，不自己算逐帧位移——自己算的那套在
+            // 玻璃容器里会卡，这一条已经踩过一次。
             WorkbenchView(sessionID: sessionID)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Fluid.Palette.obsidian)
         }
         .sheet(isPresented: $showModelPicker) {
             ModelPicker(selection: $account.selectedModel, models: account.models)

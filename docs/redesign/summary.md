@@ -57,3 +57,19 @@
 编译只能交给 GitHub Actions 的 macOS runner；「运行验收」只能做到出包 + 解包校验
 Info.plist 与 SHA256。SwiftUI 的观感必须由人装在手机上确认——所以才有
 [acceptance-2.17.md](acceptance-2.17.md)。
+
+## 六、当前进度（2026-11-19）
+
+| 项 | 状态 |
+| --- | --- |
+| 交付版本 | **2.19.6 / build 30**（每次出包都核对 Info.plist 与 release digest） |
+| 启动动画 | 已实现：石墨底 → 玻璃面板 + 字标 → **霜化玻璃抬起、应用由朦胧变清晰**（3.0s，Reduce Motion 1.4s） |
+| 插件市场 | 接真实目录（41 个条目），每行有「安装」，有主机时打开主机 DSH |
+| 关于 | 版本块（34pt 等宽 + build + 复制）与制作人块（郑壹鸣 / Created by Zheng Yiming）独立成块 |
+| 工作台 | pane 常驻 + 专注模式；聊天里的工作台现在是**两档 sheet**（medium / large，系统拖拽） |
+| 底部遮挡 | 浮条出现时 TabView 统一让出 64pt，不再逐页打补丁 |
+| dsh-Go 引擎 | 许可证已改 AGPL-3.0；引擎在 CI 编译通过（NodeMobile + 三个 framework + 45.9MB runtime），**尚未嵌入 App** |
+
+仍未完成：工作台从底部导航的连续形变、Model Rail 全页并入 Fluid token、
+插件/设备/构建页的完整重构、Dynamic Type 与 VoiceOver 全量审计、
+浅色模式的真机观感确认。
