@@ -149,5 +149,7 @@ struct DevicesView: View {
             }
         }
         .padding(14)
+        // 整行念成一句：主机名、地址、是否已连接。
+        .accessibilityElement(children: .contain)
     }
 }

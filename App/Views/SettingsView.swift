@@ -351,6 +351,7 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 13)
             .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
         }
         .buttonStyle(.plain)
     }
@@ -368,7 +369,7 @@ struct SettingsView: View {
 
             Spacer()
 
-            Toggle("", isOn: isOn)
+            Toggle(title, isOn: isOn)
                 .labelsHidden()
                 .tint(DSH.Palette.accent)
         }

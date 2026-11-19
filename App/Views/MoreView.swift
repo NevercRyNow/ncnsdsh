@@ -195,5 +195,7 @@ struct MoreView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
         .contentShape(Rectangle())
+        // 读屏把整行念成一句「插件，3 个已装」，而不是把 cpu、folder 这些装饰图标也念出来。
+        .accessibilityElement(children: .combine)
     }
 }
