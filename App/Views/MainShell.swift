@@ -1,5 +1,15 @@
 import SwiftUI
 
+/// 浮条按下时轻微回弹。浮条不再支持拖动——它在 GlassEffectContainer 里，
+/// 每帧移动都会让容器重算玻璃形状，真机上表现为跟手迟滞甚至停住。
+struct MiniBarButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(response: 0.22, dampingFraction: 0.85), value: configuration.isPressed)
+    }
+}
+
 struct MainShell: View {
     @EnvironmentObject private var demo: DemoStore
     @EnvironmentObject private var router: AppRouter
@@ -7,8 +17,6 @@ struct MainShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var expanded: UUID?
-    @State private var dockOffset: CGSize = .zero
-    @GestureState private var dockDragging = false
     @Namespace private var miniNamespace
 
     private var liveSession: ChatSession? {
@@ -84,86 +92,57 @@ struct MainShell: View {
 
     // MARK: - Mini bar
 
+    /// 运行中会话的浮条。**不支持拖动**：它在 `GlassEffectContainer` 里，
+    /// 每帧改 offset 都会让容器重算玻璃形状，真机上就是拖不动/迟滞；
+    /// 点一下展开成全屏对话，这也是它唯一的用途。
     private func miniBar(_ session: ChatSession) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "cpu")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(DSH.Palette.accent)
-                .frame(width: 32, height: 32)
-                .background(DSH.Palette.accent.opacity(0.16), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        Button {
+            expand(session)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "cpu")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(DSH.Palette.accent)
+                    .frame(width: 32, height: 32)
+                    .background(DSH.Palette.accent.opacity(0.16), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(session.title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(DSH.Palette.text)
-                    .lineLimit(1)
-                Text("正在工作 · \(Int(session.progress * 100))%")
-                    .font(.system(size: 10))
-                    .foregroundStyle(DSH.Palette.secondary)
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(session.title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(DSH.Palette.text)
+                        .lineLimit(1)
+                    Text("正在工作 · \(Int(session.progress * 100))%")
+                        .font(.system(size: 10))
+                        .foregroundStyle(DSH.Palette.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                Circle()
+                    .fill(DSH.Palette.accent)
+                    .frame(width: 6, height: 6)
+
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(DSH.Palette.tertiary)
             }
-
-            Spacer(minLength: 8)
-
-            Circle()
-                .fill(DSH.Palette.accent)
-                .frame(width: 6, height: 6)
-
-            Image(systemName: "chevron.up")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(DSH.Palette.tertiary)
+            .padding(.horizontal, 12)
+            .frame(height: 52)
+            .background(
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .fill(Color(white: 0.075).opacity(0.96))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.55), radius: 18, y: 8)
+            .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         }
-        .padding(.horizontal, 12)
-        .frame(height: 52)
-        .background(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color(white: 0.075).opacity(0.96))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.10), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.55), radius: 18, y: 8)
-        .scaleEffect(dockDragging ? 1.02 : 1)
-        .offset(x: dockOffset.width, y: dockOffset.height)
-        .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .zIndex(3)
-        .onTapGesture { expand(session) }
-        .gesture(
-            // minimumDistance 不能是 0：那会把点击也吞成拖动，还会和后面的滚动手势打架。
-            DragGesture(minimumDistance: 8)
-                .updating($dockDragging) { _, state, _ in
-                    state = true
-                }
-                .onChanged { value in
-                    // 跟手 + 橡皮筋：超过范围后按 1/3 缓动，不会硬停
-                    // 横移只给很小一段：这条是任务条，不是可以甩出去的卡片；
-                    // 旋转每帧重算阴影和模糊太贵，直接去掉。
-                    dockOffset = CGSize(
-                        width: rubber(value.translation.width, limit: 36),
-                        height: rubber(min(0, value.translation.height), limit: 72)
-                    )
-                }
-                .onEnded { value in
-                    if value.translation.height < -52 { expand(session) }
-                }
-        )
-        // 手势结束或被系统打断时，@GestureState 一定会复位；靠这里回弹，
-        // 才不会出现「拖到一半松手/被打断，条子停在半空」。
-        .onChange(of: dockDragging) { _, dragging in
-            guard !dragging, dockOffset != .zero else { return }
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
-                dockOffset = .zero
-            }
-        }
-    }
-
-    /// 超出限制后按 1/3 阻尼拉伸，松手回弹。
-    private func rubber(_ value: CGFloat, limit: CGFloat) -> CGFloat {
-        let magnitude = abs(value)
-        guard magnitude > limit else { return value }
-        let stretched = limit + (magnitude - limit) / 3
-        return value < 0 ? -stretched : stretched
+        .buttonStyle(MiniBarButtonStyle())
+        .accessibilityLabel("\(session.title)，正在工作")
+        .accessibilityHint("轻点展开对话")
     }
 
     private func expand(_ session: ChatSession) {
