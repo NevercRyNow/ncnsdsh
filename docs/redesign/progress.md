@@ -11,7 +11,7 @@
 | 2.16.1 | `d61e198` | 改名 `Fluid.Typography` | **成功**，IPA 校验通过（2.16.1 / build 5） |
 | 2.17.0 | `e16ac18` | Intelligence Core、Design Gallery | 被下一次推送取消 |
 | 2.17.1 | `6d3dbc8` | 动态色 token、去掉 13 处 `.preferredColorScheme(.dark)` | 编译失败：`ToolStatus` 未遵循 `Equatable` |
-| 2.17.2 | `f635aa7` | 修 Core 状态比较；工作台 pane 常驻 + 专注模式 | 见下方 |
+| 2.17.2–2.17.5 | `f635aa7`…`d4c545e5` | Core / 浅色 / 工作台 / Runtime / 设置 / **Dock 回退** | 多次排队被清；最终 2.17.6 一次成功 |
 
 ## 2.17.2 的设计与工程变更
 
@@ -115,3 +115,13 @@ Info.plist 与 SHA256。SwiftUI 的观感必须由人装在手机上确认。
 恢复时要注意的一件事：4 个提交是一起进构建的，如果编译失败，先看日志里第一个
 `error:` 的文件；已知的高风险点是 `App/Workbench/WorkbenchView.swift`（2.17.2 重写）
 和 `App/Views/SettingsView.swift`（2.17.4 新加的分区 helper）。
+
+## 2.17.6 验证结果（2026-11-19）
+
+- GitHub Actions run `44428580998`：Build / Package / Upload / Release 全部 success。
+- IPA：3,913,507 字节，SHA-256 `22c0459dc376ab6b420860336a72c08a56062d3eade93f973b70165412efc1ba`，
+  与 GitHub release 资产 `digest` 一致。
+- 解包读 `Payload/NcnsDSH.app/Info.plist`：`CFBundleShortVersionString = 2.17.6`，
+  `CFBundleVersion = 12`，`MinimumOSVersion = 17.0`，可执行文件在包内。
+- 构建日志里 2.17.5 唯一的错误是 `WorkbenchView` 用了不存在的
+  `Fluid.Palette.canvas` / `.raised`（应为 `.obsidian` / `.graphite`），2.17.6 已修。
