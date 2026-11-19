@@ -1,0 +1,44 @@
+<mxfile host="dsh-drawai" agent="dsh-drawai" type="device">
+  <diagram id="dsh-drawai-page-1" name="Page-1">
+    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n1" value="NcnsDSH · 启动动画（Fluid Intelligence）" style="rounded=0;whiteSpace=wrap;html=1;fontColor=#1a1a1a;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="720" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" value="| 时间 | 画面 | 运动 |
+| 0.00–0.45s | 近黑石墨底，极缓慢的冰蓝光斑从左下浮起 | 光斑位移 ≤24px，透明度 0→0.5，easeOut |
+| 0.35–0.95s | 一块玻璃面板从 0.94 缩放到 1，边缘高光沿上沿亮起 | scale 0.94→1，顶部 1px 高光 0→0.35，easeOutCubic |
+| 0.85–1.55s | 面板内出现 BrandMark，玻璃折射光斜掠过一次 | 品牌图形 scale 0.9→1，同一条 14° 高光扫过 620ms |
+| 1.45–2.05s | 字标 NcnsDSH 逐字浮现，8px 上浮 | 每字错峰 30ms，opacity+8px，无缩放 |
+| 1.90–2.40s | 副标 Fluid Intelligence 出现 | opacity 0→1，tracking 展开 2→3.2 |
+| 2.40–2.60s | 整体微微提亮后淡出，交给 RootView | 全屏 opacity 1→0，同时 scale 1→1.02 |
+" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="640" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" value="9:16 · 1180×2556 · 30fps · 2.6s · App 内启动" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="92" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n4" value="16:9 · 1920×1080 · 30fps · 2.6s · 宣传/落地页" style="rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="172" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n5" value="克制规则
+
+· 只有 1 个强调色（冰蓝），不出现第二种饱和色
+· 玻璃只用一层，不做玻璃叠玻璃
+· 位移总距离 &lt; 40px，无弹跳、无旋转
+· 减弱动态效果时：只保留 opacity，位移与缩放归零
+· 2.6s 内必须能看到字标，不靠循环动画撑时长" style="rounded=0;whiteSpace=wrap;html=1;fontColor=#1a1a1a;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="720" y="260" width="420" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;" edge="1" parent="1" source="n3" target="n1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;" edge="1" parent="1" source="n4" target="n1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
