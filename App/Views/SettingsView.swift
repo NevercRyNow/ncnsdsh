@@ -258,7 +258,7 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { showAdvanced = false }
+                    Button("完成") { panel = nil }
                 }
             }
         }

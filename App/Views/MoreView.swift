@@ -103,6 +103,27 @@ struct MoreView: View {
         }
     }
 
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .tracking(1.2)
+            .textCase(.uppercase)
+            .foregroundStyle(Fluid.Palette.slate)
+            .padding(.horizontal, 2)
+    }
+
+    private func group<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(DSH.Palette.hairline)
+            .frame(height: 0.5)
+            .padding(.leading, 56)
+    }
+
     /// 工具目录里的方块：图标 + 名字 + 一行状态。和设置页的行式列表刻意不同。
     private func tile(_ icon: String, _ title: String, _ value: String, action: @escaping () -> Void) -> some View {
         Button {
