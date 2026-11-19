@@ -16,6 +16,7 @@ struct RootView: View {
     @StateObject private var environment = EnvironmentManager()
     @StateObject private var performance = PerformanceCenter()
     @StateObject private var runtimes = RuntimeManager()
+    @State private var launching = true
 
     var body: some View {
         MainShell()
@@ -39,6 +40,13 @@ struct RootView: View {
             // Siri / 快捷指令 / 小组件按下时，把意图交给当前窗口。
             NcnsIntentBridge.open = { target in
                 router.handle(target, demo: demo)
+            }
+        }
+        .overlay {
+            if launching {
+                LaunchSequence { launching = false }
+                    .transition(.opacity)
+                    .zIndex(10)
             }
         }
         .onOpenURL { url in
