@@ -171,6 +171,24 @@ final class DemoStore: ObservableObject {
         )
     }
 
+    /// 中断生成：取消流式任务，把没写完的助手消息收尾，会话退回空闲。
+    /// 之前只有 send，没有 stop —— 一旦开始流式，界面就再也停不下来。
+    func cancelStreaming(in sessionID: UUID) {
+        streamTask?.cancel()
+        streamTask = nil
+
+        if var list = messages[sessionID] {
+            var changed = false
+            for index in list.indices where list[index].isStreaming {
+                list[index].isStreaming = false
+                changed = true
+            }
+            if changed { messages[sessionID] = list }
+        }
+
+        bump(sessionID, preview: "已中断", running: false, progress: 0)
+    }
+
     func approve() {
         guard let request = approval else { return }
         approval = nil

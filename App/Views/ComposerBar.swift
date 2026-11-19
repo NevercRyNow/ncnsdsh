@@ -11,11 +11,18 @@ struct ComposerBar: View {
     var onAttach: (() -> Void)?
     var onModel: (() -> Void)?
     var onQueue: (() -> Void)?
+    var onStop: (() -> Void)?
 
     @FocusState.Binding var focused: Bool
 
     private var canSend: Bool {
         !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isBusy
+    }
+
+    private var buttonFill: Color {
+        if isBusy, onStop != nil { return DSH.Palette.danger.opacity(0.85) }
+        if isBusy { return canQueue ? DSH.Palette.warning : Color.white.opacity(0.12) }
+        return canSend ? DSH.Palette.accent : Color.white.opacity(0.12)
     }
 
     private var canQueue: Bool {
@@ -70,6 +77,11 @@ struct ComposerBar: View {
                 Spacer(minLength: 8)
 
                 Button {
+                    if isBusy, let onStop {
+                        Haptics.light()
+                        onStop()
+                        return
+                    }
                     if isBusy {
                         guard canQueue else { return }
                         Haptics.light()
@@ -80,16 +92,17 @@ struct ComposerBar: View {
                     Haptics.soft()
                     onSend()
                 } label: {
-                    Image(systemName: isBusy ? "text.badge.plus" : "arrow.up")
-                        .font(.system(size: 14, weight: .bold))
+                    Image(systemName: isBusy && onStop != nil ? "stop.fill" : (isBusy ? "text.badge.plus" : "arrow.up"))
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
                         .background(
-                            Circle().fill(isBusy ? (canQueue ? DSH.Palette.warning : Color.white.opacity(0.12)) : (canSend ? DSH.Palette.accent : Color.white.opacity(0.12)))
+                            Circle().fill(buttonFill)
                         )
                 }
                 .buttonStyle(.plain)
-                .disabled(!canSend && !canQueue)
+                .disabled(!canSend && !canQueue && !(isBusy && onStop != nil))
+                .accessibilityLabel(isBusy && onStop != nil ? "停止生成" : "发送")
                 .animation(DSH.Motion.snap, value: canSend)
             }
         }

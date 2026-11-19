@@ -110,6 +110,7 @@ struct ChatView: View {
                 demo.send(outgoing, in: sessionID)
             },
             onModel: { showModelPicker = true },
+            onStop: { demo.cancelStreaming(in: sessionID) },
             focused: $composerFocused
         )
     }
