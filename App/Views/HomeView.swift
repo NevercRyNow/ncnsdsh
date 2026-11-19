@@ -171,9 +171,16 @@ struct HomeView: View {
             sectionTitle("快捷操作")
 
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                // 配了 API Key 就开真实会话（LocalStore + LocalEngine）；
+                // 没配才落到演示会话，演示会话的回复是脚本，不是模型生成的。
                 action("新建会话", "square.and.pencil") {
-                    demo.newSession()
-                    if let id = demo.activeSessionID { router.open(.session(id)) }
+                    if !account.key.isEmpty {
+                        let id = local.createSession(model: account.selectedModel)
+                        router.open(.localSession(id))
+                    } else {
+                        demo.newSession()
+                        if let id = demo.activeSessionID { router.open(.session(id)) }
+                    }
                 }
                 // 工作台三档：小卡 / 半屏 / 全屏，靠系统 detents 与拖拽手势，
                 // 不自己算逐帧位移（自己算的那套在玻璃容器里会卡）。

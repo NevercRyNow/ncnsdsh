@@ -7,16 +7,15 @@ struct MoreView: View {
     @EnvironmentObject private var store: HostStore
     @EnvironmentObject private var environment: EnvironmentManager
 
-    @State private var showPlugins = false
-    @State private var showAutomations = false
-    @State private var showBuild = false
-    @State private var showDevices = false
-    @State private var showSettings = false
-    @State private var showEnvironment = false
-    @State private var showPerformance = false
-    @State private var showAbout = false
-    @State private var showGallery = false
-    @State private var showRuntime = false
+    /// 一个 sheet 入口。之前十个 .sheet(isPresented:) 挂在同一个视图上，
+    /// SwiftUI 只保证一个能工作，偶尔就会出现「点了没反应 / 卡住」。
+    private enum Panel: String, Identifiable {
+        case plugins, automations, build, devices, settings, environment, performance, gallery, about, runtime
+        var id: String { rawValue }
+    }
+
+    @State private var panel: Panel?
+
 
     var body: some View {
         ScrollView {
@@ -24,30 +23,30 @@ struct MoreView: View {
                 sectionTitle("工具")
 
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                    tile("puzzlepiece.extension", "插件", "\(plugins.installed.count) 个已装") { showPlugins = true }
-                    tile("arrow.triangle.2.circlepath", "自动化", "\(demo.schedules.count) 个定时") { showAutomations = true }
-                    tile("hammer", "构建", "GitHub Actions") { showBuild = true }
-                    tile("desktopcomputer", "设备", store.current == nil ? "未连接" : "已连接") { showDevices = true }
-                    tile("speedometer", "性能", "内存 · 热状态") { showPerformance = true }
-                    tile("cpu", "本机运行时", "进程内") { showRuntime = true }
+                    tile("puzzlepiece.extension", "插件", "\(plugins.installed.count) 个已装") { panel = .plugins }
+                    tile("arrow.triangle.2.circlepath", "自动化", "\(demo.schedules.count) 个定时") { panel = .automations }
+                    tile("hammer", "构建", "GitHub Actions") { panel = .build }
+                    tile("desktopcomputer", "设备", store.current == nil ? "未连接" : "已连接") { panel = .devices }
+                    tile("speedometer", "性能", "内存 · 热状态") { panel = .performance }
+                    tile("cpu", "本机运行时", "进程内") { panel = .runtime }
                 }
 
                 sectionTitle("环境")
 
                 group {
                     row(icon: "point.3.connected.trianglepath.dotted", title: "当前环境", value: environment.current?.name ?? "这台 iPhone") {
-                        showEnvironment = true
+                        panel = .environment
                     }
                 }
 
                 sectionTitle("系统")
 
                 group {
-                    row(icon: "gearshape", title: "设置", value: "") { showSettings = true }
+                    row(icon: "gearshape", title: "设置", value: "") { panel = .settings }
                     divider
-                    row(icon: "paintpalette", title: "设计系统", value: "色板 · 材质 · 动效") { showGallery = true }
+                    row(icon: "paintpalette", title: "设计系统", value: "色板 · 材质 · 动效") { panel = .gallery }
                     divider
-                    row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) { showAbout = true }
+                    row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) { panel = .about }
                 }
 
                 // 署名往上提、放大一点：它原来是行小灰字，正好被运行中的浮条压住。
@@ -78,57 +77,30 @@ struct MoreView: View {
         .background(DSH.Palette.canvas)
         .navigationTitle("更多")
         .navigationBarTitleDisplayMode(.large)
-        .sheet(isPresented: $showPlugins) {
-            PluginsView().environmentObject(plugins).environmentObject(store)
+        .sheet(item: $panel) { panel in
+            switch panel {
+            case .plugins:
+                PluginsView().environmentObject(plugins).environmentObject(store)
+            case .automations:
+                ScheduleView().environmentObject(demo)
+            case .build:
+                BuildView()
+            case .devices:
+                NavigationStack { DevicesView() }
+            case .settings:
+                SettingsView()
+            case .environment:
+                EnvironmentView().environmentObject(store).environmentObject(environment)
+            case .performance:
+                PerformanceView()
+            case .gallery:
+                DesignGalleryView()
+            case .about:
+                AboutView()
+            case .runtime:
+                LocalRuntimeView()
+            }
         }
-        .sheet(isPresented: $showAutomations) {
-            ScheduleView().environmentObject(demo)
-        }
-        .sheet(isPresented: $showBuild) {
-            BuildView()
-        }
-        .sheet(isPresented: $showDevices) {
-            NavigationStack { DevicesView() }
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
-        .sheet(isPresented: $showEnvironment) {
-            EnvironmentView().environmentObject(store).environmentObject(environment)
-        }
-        .sheet(isPresented: $showPerformance) {
-            PerformanceView()
-        }
-        .sheet(isPresented: $showGallery) {
-            DesignGalleryView()
-        }
-        .sheet(isPresented: $showAbout) {
-            AboutView()
-        }
-        .sheet(isPresented: $showRuntime) {
-            LocalRuntimeView()
-        }
-    }
-
-    private func group<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(spacing: 0) { content() }
-            .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private var divider: some View {
-        Rectangle()
-            .fill(DSH.Palette.hairline)
-            .frame(height: 0.5)
-            .padding(.leading, 54)
-    }
-
-    private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-            .tracking(1.2)
-            .textCase(.uppercase)
-            .foregroundStyle(Fluid.Palette.slate)
-            .padding(.horizontal, 2)
     }
 
     /// 工具目录里的方块：图标 + 名字 + 一行状态。和设置页的行式列表刻意不同。

@@ -47,6 +47,7 @@ struct ChatView: View {
                 .padding(.bottom, 8)
             }
             .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .defaultScrollAnchor(.bottom)
             .onChange(of: messages.count) { _, _ in
                 withAnimation(Motion.gentle) {
@@ -80,6 +81,12 @@ struct ChatView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { composer }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("完成") { composerFocused = false }
+            }
+        }
         .onAppear {
             chrome.chatOpen = true
             if let incoming = demo.pendingDraft {

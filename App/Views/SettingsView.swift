@@ -10,14 +10,14 @@ struct SettingsView: View {
     @EnvironmentObject private var plugins: PluginStore
     @EnvironmentObject private var settings: SettingsStore
 
-    @State private var showAccount = false
-    @State private var showPlugins = false
-    @State private var showAutomation = false
-    @State private var showPhone = false
-    @State private var showCredits = false
-    @State private var showConnect = false
-    @State private var showAdvanced = false
-    @State private var showWeb = false
+    /// 和「更多」一样：一个 item sheet，而不是八个 .sheet(isPresented:) 抢同一层。
+    private enum Panel: String, Identifiable {
+        case account, phone, about, connect, plugins, automation, advanced, web
+        var id: String { rawValue }
+    }
+
+    @State private var panel: Panel?
+
 
     var body: some View {
         NavigationStack {
@@ -40,30 +40,26 @@ struct SettingsView: View {
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.large)
         }
-        .sheet(isPresented: $showAccount) {
-            AccountView().environmentObject(account)
-        }
-        .sheet(isPresented: $showPhone) {
-            PhoneLoginView().environmentObject(phone)
-        }
-        .sheet(isPresented: $showCredits) {
-            AboutView()
-        }
-        .sheet(isPresented: $showConnect) {
-            ConnectView().environmentObject(store)
-        }
-        .sheet(isPresented: $showPlugins) {
-            PluginsView().environmentObject(plugins).environmentObject(store)
-        }
-        .sheet(isPresented: $showAutomation) {
-            ScheduleView().environmentObject(demo)
-        }
-        .sheet(isPresented: $showAdvanced) {
-            advancedSheet
-        }
-        .sheet(isPresented: $showWeb) {
-            if let host = store.current {
-                WebScreen(host: host)
+        .sheet(item: $panel) { panel in
+            switch panel {
+            case .account:
+                AccountView().environmentObject(account)
+            case .phone:
+                PhoneLoginView().environmentObject(phone)
+            case .about:
+                AboutView()
+            case .connect:
+                ConnectView().environmentObject(store)
+            case .plugins:
+                PluginsView().environmentObject(plugins).environmentObject(store)
+            case .automation:
+                ScheduleView().environmentObject(demo)
+            case .advanced:
+                advancedSheet
+            case .web:
+                if let host = store.current {
+                    WebScreen(host: host)
+                }
             }
         }
     }
@@ -73,7 +69,7 @@ struct SettingsView: View {
     private var accountRow: some View {
         Button {
             Haptics.tap()
-            showAccount = true
+            panel = .account
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: account.isSignedIn ? "person.crop.circle.fill" : "person.crop.circle")
@@ -113,15 +109,15 @@ struct SettingsView: View {
     private var entryGroup: some View {
         VStack(spacing: 0) {
             row(icon: "puzzlepiece.extension", title: "插件", value: "\(plugins.installed.count) 个") {
-                showPlugins = true
+                panel = .plugins
             }
             divider
             row(icon: "arrow.triangle.2.circlepath", title: "自动化", value: "\(demo.schedules.count) 个") {
-                showAutomation = true
+                panel = .automation
             }
             divider
             row(icon: "iphone", title: "手机号", value: phone.signedIn ? phone.masked : "未登录") {
-                showPhone = true
+                panel = .phone
             }
         }
         .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -181,7 +177,7 @@ struct SettingsView: View {
     private var hostGroup: some View {
         VStack(spacing: 0) {
             row(icon: "desktopcomputer", title: "远端宿主", value: store.current?.displayName ?? "未连接") {
-                showConnect = true
+                panel = .connect
             }
             divider
             row(icon: "folder", title: "文件", value: AppFiles.displayPath) {
@@ -190,7 +186,7 @@ struct SettingsView: View {
             if store.current != nil {
                 divider
                 row(icon: "globe", title: "网页版", value: "插件页 / 终端") {
-                    showWeb = true
+                    panel = .web
                 }
             }
         }
@@ -200,11 +196,11 @@ struct SettingsView: View {
     private var tailGroup: some View {
         VStack(spacing: 0) {
             row(icon: "screwdriver", title: "高级", value: "") {
-                showAdvanced = true
+                panel = .advanced
             }
             divider
             row(icon: "info.circle", title: "关于", value: Bundle.main.appVersion) {
-                showCredits = true
+                panel = .about
             }
         }
         .background(DSH.Palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

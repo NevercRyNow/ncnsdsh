@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
+import PhotosUI
 
 struct LocalChatView: View {
     let sessionID: UUID
@@ -19,6 +20,7 @@ struct LocalChatView: View {
     @State private var stagesExpanded = true
     @State private var showExport = false
     @State private var showImporter = false
+    @State private var photoItem: PhotosPickerItem?
     @State private var showTrace = false
     @FocusState private var composerFocused: Bool
 
@@ -59,6 +61,7 @@ struct LocalChatView: View {
                 .padding(.bottom, 8)
             }
             .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .defaultScrollAnchor(.bottom)
             .onChange(of: messages.count) { _, _ in
                 withAnimation(Motion.gentle) { proxy.scrollTo("bottom", anchor: .bottom) }
@@ -74,6 +77,13 @@ struct LocalChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // 相册里的图片也能当附件：之前只有文件选择器，照片根本进不来。
+                PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                    Image(systemName: "photo")
+                }
+                .accessibilityLabel("从相册添加图片")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     Haptics.tap()
@@ -150,7 +160,27 @@ struct LocalChatView: View {
         .onChange(of: config.model) { _, model in
             pickedModel = model
         }
-        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task {
+                defer { photoItem = nil }
+                guard let data = try? await item.loadTransferable(type: Data.self) else {
+                    Haptics.failure()
+                    return
+                }
+                let name = "photo-\(Int(Date().timeIntervalSince1970)).jpg"
+                let url = LocalTools.workspace.appendingPathComponent(name)
+                try? FileManager.default.createDirectory(at: LocalTools.workspace, withIntermediateDirectories: true)
+                do {
+                    try data.write(to: url, options: .atomic)
+                    draft += (draft.isEmpty ? "" : "\n") + "已附加：\(name)"
+                    Haptics.success()
+                } catch {
+                    Haptics.failure()
+                }
+            }
+        }
+        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item, .image, .movie, .pdf], allowsMultipleSelection: false) { result in
             guard case .success(let urls) = result, let url = urls.first else { return }
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
