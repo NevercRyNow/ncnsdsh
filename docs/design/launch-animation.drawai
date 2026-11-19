@@ -1,0 +1,225 @@
+{
+  "format": "dsh-drawai",
+  "schemaVersion": 1,
+  "id": "087ca1d1-8497-4005-9918-707d02053d08",
+  "pages": [
+    {
+      "id": "dsh-drawai-page-1",
+      "name": "Page-1",
+      "doc": {
+        "version": 2,
+        "meta": {
+          "pinned": false,
+          "pageIndex": 0,
+          "pageCount": 1,
+          "pageNames": [
+            "Page-1"
+          ],
+          "layout": "none"
+        },
+        "nodes": [
+          {
+            "id": "n1",
+            "label": "NcnsDSH · 启动动画（Fluid Intelligence）",
+            "style": "rounded=0;whiteSpace=wrap;html=1;fontColor=#1a1a1a;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;",
+            "x": 40,
+            "y": 24,
+            "w": 720,
+            "h": 44,
+            "layer": "1"
+          },
+          {
+            "id": "n2",
+            "label": "| 时间 | 画面 | 运动 |\n| 0.00–0.45s | 近黑石墨底，极缓慢的冰蓝光斑从左下浮起 | 光斑位移 ≤24px，透明度 0→0.5，easeOut |\n| 0.35–0.95s | 一块玻璃面板从 0.94 缩放到 1，边缘高光沿上沿亮起 | scale 0.94→1，顶部 1px 高光 0→0.35，easeOutCubic |\n| 0.85–1.55s | 面板内出现 BrandMark，玻璃折射光斜掠过一次 | 品牌图形 scale 0.9→1，同一条 14° 高光扫过 620ms |\n| 1.45–2.05s | 字标 NcnsDSH 逐字浮现，8px 上浮 | 每字错峰 30ms，opacity+8px，无缩放 |\n| 1.90–2.40s | 副标 Fluid Intelligence 出现 | opacity 0→1，tracking 展开 2→3.2 |\n| 2.40–2.60s | 整体微微提亮后淡出，交给 RootView | 全屏 opacity 1→0，同时 scale 1→1.02 |\n",
+            "style": "rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;",
+            "x": 40,
+            "y": 92,
+            "w": 640,
+            "h": 360,
+            "layer": "1"
+          },
+          {
+            "id": "n3",
+            "label": "9:16 · 1180×2556 · 30fps · 2.6s · App 内启动",
+            "style": "rounded=1;",
+            "x": 720,
+            "y": 92,
+            "w": 300,
+            "h": 60,
+            "layer": "1"
+          },
+          {
+            "id": "n4",
+            "label": "16:9 · 1920×1080 · 30fps · 2.6s · 宣传/落地页",
+            "style": "rounded=1;",
+            "x": 720,
+            "y": 172,
+            "w": 300,
+            "h": 60,
+            "layer": "1"
+          },
+          {
+            "id": "n5",
+            "label": "克制规则\n\n· 只有 1 个强调色（冰蓝），不出现第二种饱和色\n· 玻璃只用一层，不做玻璃叠玻璃\n· 位移总距离 < 40px，无弹跳、无旋转\n· 减弱动态效果时：只保留 opacity，位移与缩放归零\n· 2.6s 内必须能看到字标，不靠循环动画撑时长",
+            "style": "rounded=0;whiteSpace=wrap;html=1;fontColor=#1a1a1a;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;",
+            "x": 720,
+            "y": 260,
+            "w": 420,
+            "h": 200,
+            "layer": "1"
+          },
+          {
+            "id": "n6",
+            "label": "主片 9:16",
+            "style": "shape=image;imageAspect=0;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%2090%22%3E%3Crect%20width%3D%22160%22%20height%3D%2290%22%20fill%3D%22%231f1f1f%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2245%22%20r%3D%2220%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M74%2035%20L74%2055%20L94%2045%20Z%22%20fill%3D%22%231f1f1f%22%2F%3E%3C%2Fsvg%3E;",
+            "x": 40,
+            "y": 480,
+            "w": 200,
+            "h": 430,
+            "data": {
+              "drawaiMedia": "1",
+              "drawaiMotion": "1",
+              "motion": {
+                "version": 1,
+                "prompt": "NcnsDSH 启动动画：近黑石墨底上一块玻璃面板浮入，14° 高光掠过一次，字标逐字浮现。克制、高级、苹果液态玻璃。",
+                "mode": "animation",
+                "width": 1080,
+                "height": 1920,
+                "fps": 30,
+                "duration": 2.6,
+                "results": [],
+                "project": ".drawai-motion/v2/88d53bd8988b8b2210c59dc1b826f4175e2d8dfcd2826e25ba456bf2e0901fcb"
+              }
+            },
+            "layer": "1"
+          },
+          {
+            "id": "n7",
+            "label": "主片 16:9",
+            "style": "shape=image;imageAspect=0;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%2090%22%3E%3Crect%20width%3D%22160%22%20height%3D%2290%22%20fill%3D%22%231f1f1f%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2245%22%20r%3D%2220%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M74%2035%20L74%2055%20L94%2045%20Z%22%20fill%3D%22%231f1f1f%22%2F%3E%3C%2Fsvg%3E;",
+            "x": 280,
+            "y": 480,
+            "w": 420,
+            "h": 236,
+            "data": {
+              "drawaiMedia": "1",
+              "drawaiMotion": "1",
+              "motion": {
+                "version": 1,
+                "prompt": "",
+                "mode": "scene",
+                "width": 1280,
+                "height": 720,
+                "fps": 30,
+                "duration": 12,
+                "results": []
+              }
+            },
+            "layer": "1"
+          },
+          {
+            "id": "n8",
+            "label": "弥散渐变·玻璃拟态",
+            "style": "rounded=1;arcSize=10;whiteSpace=wrap;fontSize=14;fontColor=#5a4a1a;fillColor=#fdf6e3;strokeColor=#c9a227;",
+            "x": 40,
+            "y": 960,
+            "w": 300,
+            "h": 90,
+            "data": {
+              "drawaiMgStyle": "1",
+              "mgStyleSlug": "12-aurora-glass",
+              "mgStyleCommit": "49052d80bfaf9fa8412cc9710530e5e95a3b8d8c"
+            },
+            "layer": "1"
+          },
+          {
+            "id": "n9",
+            "label": "【分镜表】\n| 镜头 | 帧区间 | 镜头卡 | 这一镜要做什么 | 屏幕上出现什么 | 文案 / 声音 |\n| --- | --- | --- | --- | --- | --- |\n| shot-1 | 0–29f | — | 光场起来，玻璃面板浮入 | 近黑石墨底，冰蓝光斑自下浮起，玻璃面板 0.94→1 落位，上沿高光渐亮 | — |\n| shot-2 | 30–57f | — | 品牌图形落定，高光掠过 | 面板内 BrandMark 浮现，一条 14° 白高光从左掠到右一次 | — |\n| shot-3 | 58–77f | — | 字标与副标，收束 | NcnsDSH 逐字上浮 8px，FLUID INTELLIGENCE 字距展开，整体淡出 | NcnsDSH / FLUID INTELLIGENCE |",
+            "style": "rounded=0;whiteSpace=wrap;html=1;fontSize=12;fontFamily=monospace;fillColor=none;strokeColor=#c8c2b4;text=1;align=left;verticalAlign=top;",
+            "w": 700,
+            "h": 190,
+            "data": {
+              "drawaiTableEscaped": "1"
+            },
+            "x": 380,
+            "y": 1100
+          },
+          {
+            "id": "n10",
+            "label": "【风格】\npage #0B0C0F / accent #64B5FF / 单一强调色 / 玻璃只一层 / 位移<40px / 无弹跳无旋转",
+            "style": "rounded=0;whiteSpace=wrap;html=1;fontSize=12;fontFamily=monospace;fillColor=none;strokeColor=#c8c2b4;text=1;align=left;verticalAlign=top;",
+            "w": 440,
+            "h": 82,
+            "x": 380,
+            "y": 1346
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "style": "rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;",
+            "from": "n3",
+            "to": "n1",
+            "layer": "1"
+          },
+          {
+            "id": "e2",
+            "style": "rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;",
+            "from": "n4",
+            "to": "n1",
+            "layer": "1"
+          },
+          {
+            "id": "e3",
+            "style": "rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;",
+            "from": "n8",
+            "to": "n6",
+            "layer": "1"
+          },
+          {
+            "id": "e4",
+            "style": "rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;",
+            "from": "n8",
+            "to": "n7",
+            "layer": "1"
+          }
+        ],
+        "labels": [],
+        "drawOrder": [
+          "n1",
+          "n2",
+          "n3",
+          "n4",
+          "n5",
+          "e1",
+          "e2",
+          "n6",
+          "n7",
+          "n8",
+          "e3",
+          "e4"
+        ],
+        "layers": [
+          {
+            "id": "1",
+            "name": "",
+            "visible": true,
+            "locked": false
+          }
+        ],
+        "page": {
+          "w": 850,
+          "h": 1100
+        }
+      },
+      "notes": []
+    }
+  ],
+  "compat": {
+    "drawio": "<mxfile host=\"dsh-drawai\" agent=\"dsh-drawai\" type=\"device\">\n  <diagram id=\"dsh-drawai-page-1\" name=\"Page-1\">\n    <mxGraphModel dx=\"0\" dy=\"0\" grid=\"1\" gridSize=\"10\" guides=\"1\" tooltips=\"1\" connect=\"1\" arrows=\"1\" fold=\"1\" page=\"1\" pageScale=\"1\" pageWidth=\"850\" pageHeight=\"1100\" math=\"0\" shadow=\"0\">\n      <root>\n        <mxCell id=\"0\" />\n        <mxCell id=\"1\" parent=\"0\" />\n        <mxCell id=\"n1\" value=\"NcnsDSH · 启动动画（Fluid Intelligence）\" style=\"rounded=0;whiteSpace=wrap;html=1;fontColor=#1a1a1a;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;\" vertex=\"1\" parent=\"1\">\n          <mxGeometry x=\"40\" y=\"24\" width=\"720\" height=\"44\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"n2\" value=\"| 时间 | 画面 | 运动 |\n| 0.00–0.45s | 近黑石墨底，极缓慢的冰蓝光斑从左下浮起 | 光斑位移 ≤24px，透明度 0→0.5，easeOut |\n| 0.35–0.95s | 一块玻璃面板从 0.94 缩放到 1，边缘高光沿上沿亮起 | scale 0.94→1，顶部 1px 高光 0→0.35，easeOutCubic |\n| 0.85–1.55s | 面板内出现 BrandMark，玻璃折射光斜掠过一次 | 品牌图形 scale 0.9→1，同一条 14° 高光扫过 620ms |\n| 1.45–2.05s | 字标 NcnsDSH 逐字浮现，8px 上浮 | 每字错峰 30ms，opacity+8px，无缩放 |\n| 1.90–2.40s | 副标 Fluid Intelligence 出现 | opacity 0→1，tracking 展开 2→3.2 |\n| 2.40–2.60s | 整体微微提亮后淡出，交给 RootView | 全屏 opacity 1→0，同时 scale 1→1.02 |\n\" style=\"rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;\" vertex=\"1\" parent=\"1\">\n          <mxGeometry x=\"40\" y=\"92\" width=\"640\" height=\"360\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"n3\" value=\"9:16 · 1180×2556 · 30fps · 2.6s · App 内启动\" style=\"rounded=1;\" vertex=\"1\" parent=\"1\">\n          <mxGeometry x=\"720\" y=\"92\" width=\"300\" height=\"60\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"n4\" value=\"16:9 · 1920×1080 · 30fps · 2.6s · 宣传/落地页\" style=\"rounded=1;\" vertex=\"1\" parent=\"1\">\n          <mxGeometry x=\"720\" y=\"172\" width=\"300\" height=\"60\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"n5\" value=\"克制规则\n\n· 只有 1 个强调色（冰蓝），不出现第二种饱和色\n· 玻璃只用一层，不做玻璃叠玻璃\n· 位移总距离 &lt; 40px，无弹跳、无旋转\n· 减弱动态效果时：只保留 opacity，位移与缩放归零\n· 2.6s 内必须能看到字标，不靠循环动画撑时长\" style=\"rounded=0;whiteSpace=wrap;html=1;fontColor=#1a1a1a;fillColor=none;strokeColor=none;text=1;align=center;verticalAlign=middle;\" vertex=\"1\" parent=\"1\">\n          <mxGeometry x=\"720\" y=\"260\" width=\"420\" height=\"200\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"e1\" style=\"rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;\" edge=\"1\" parent=\"1\" source=\"n3\" target=\"n1\">\n          <mxGeometry relative=\"1\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"e2\" style=\"rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;\" edge=\"1\" parent=\"1\" source=\"n4\" target=\"n1\">\n          <mxGeometry relative=\"1\" as=\"geometry\" />\n        </mxCell>\n        <object label=\"主片 9:16\" drawaiMedia=\"1\" drawaiMotion=\"1\" motion=\"{&quot;version&quot;:1,&quot;prompt&quot;:&quot;&quot;,&quot;mode&quot;:&quot;scene&quot;,&quot;width&quot;:1280,&quot;height&quot;:720,&quot;fps&quot;:30,&quot;duration&quot;:12,&quot;results&quot;:[]}\" id=\"n6\">\n          <mxCell id=\"n6\" style=\"shape=image;imageAspect=0;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%2090%22%3E%3Crect%20width%3D%22160%22%20height%3D%2290%22%20fill%3D%22%231f1f1f%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2245%22%20r%3D%2220%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M74%2035%20L74%2055%20L94%2045%20Z%22%20fill%3D%22%231f1f1f%22%2F%3E%3C%2Fsvg%3E;\" vertex=\"1\" parent=\"1\">\n            <mxGeometry x=\"40\" y=\"480\" width=\"200\" height=\"430\" as=\"geometry\" />\n          </mxCell>\n        </object>\n        <object label=\"主片 16:9\" drawaiMedia=\"1\" drawaiMotion=\"1\" motion=\"{&quot;version&quot;:1,&quot;prompt&quot;:&quot;&quot;,&quot;mode&quot;:&quot;scene&quot;,&quot;width&quot;:1280,&quot;height&quot;:720,&quot;fps&quot;:30,&quot;duration&quot;:12,&quot;results&quot;:[]}\" id=\"n7\">\n          <mxCell id=\"n7\" style=\"shape=image;imageAspect=0;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%2090%22%3E%3Crect%20width%3D%22160%22%20height%3D%2290%22%20fill%3D%22%231f1f1f%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2245%22%20r%3D%2220%22%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.92%22%2F%3E%3Cpath%20d%3D%22M74%2035%20L74%2055%20L94%2045%20Z%22%20fill%3D%22%231f1f1f%22%2F%3E%3C%2Fsvg%3E;\" vertex=\"1\" parent=\"1\">\n            <mxGeometry x=\"280\" y=\"480\" width=\"420\" height=\"236\" as=\"geometry\" />\n          </mxCell>\n        </object>\n        <object label=\"弥散渐变·玻璃拟态\" drawaiMgStyle=\"1\" mgStyleSlug=\"12-aurora-glass\" mgStyleCommit=\"49052d80bfaf9fa8412cc9710530e5e95a3b8d8c\" id=\"n8\">\n          <mxCell id=\"n8\" style=\"rounded=1;arcSize=10;whiteSpace=wrap;fontSize=14;fontColor=#5a4a1a;fillColor=#fdf6e3;strokeColor=#c9a227;\" vertex=\"1\" parent=\"1\">\n            <mxGeometry x=\"40\" y=\"960\" width=\"300\" height=\"90\" as=\"geometry\" />\n          </mxCell>\n        </object>\n        <mxCell id=\"e3\" style=\"rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;\" edge=\"1\" parent=\"1\" source=\"n8\" target=\"n6\">\n          <mxGeometry relative=\"1\" as=\"geometry\" />\n        </mxCell>\n        <mxCell id=\"e4\" style=\"rounded=1;html=1;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;endArrow=classic;drawaiRoutingMode=manual;\" edge=\"1\" parent=\"1\" source=\"n8\" target=\"n7\">\n          <mxGeometry relative=\"1\" as=\"geometry\" />\n        </mxCell>\n      </root>\n    </mxGraphModel>\n  </diagram>\n</mxfile>\n"
+  },
+  "migration": {
+    "sourcePath": "",
+    "sourceHash": "b69284f14762"
+  }
+}

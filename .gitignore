@@ -1,6 +1,11 @@
 build/
 Payload/
 *.ipa
+dist/
 build.log
 SHA256.txt
-DSHPocket.xcodeproj/
+*.xcodeproj/
+
+# DrawAI 视频工程（含 70MB+ 字体，不进仓库）
+docs/design/.drawai-motion/
+docs/design/.drawai-cache/
