@@ -19,15 +19,28 @@ struct LaunchSequence: View {
     @State private var mark: Double = 0
     @State private var word: Double = 0
     @State private var tagline: Double = 0
-    @State private var exiting = false
+    /// 石墨底退场进度：到 1 时底和内容都没了，露出下面那层霜化玻璃。
+    @State private var unveil: Double = 0
+    /// 霜化层不透明度：1 = 朦胧，0 = 清晰。
+    @State private var veil: Double = 0
 
-    private var duration: Double { reduceMotion ? 1.2 : 2.6 }
+    private var duration: Double { reduceMotion ? 1.4 : 3.0 }
 
     var body: some View {
         ZStack {
-            Fluid.Palette.obsidian.ignoresSafeArea()
+            // 最底层：霜化玻璃。它模糊的是**下面那个已经显示的 App**，
+            // 所以石墨底退掉之后，应用是"隔着一层朦胧玻璃"出现的，再随 veil→0 变清晰。
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .opacity(veil)
+                .ignoresSafeArea()
+
+            Fluid.Palette.obsidian
+                .opacity(1 - unveil)
+                .ignoresSafeArea()
 
             blobs
+                .opacity(1 - unveil)
 
             VStack(spacing: 18) {
                 glassPanel
@@ -35,9 +48,8 @@ struct LaunchSequence: View {
                 taglineText
             }
             .offset(y: reduceMotion ? 0 : -6)
+            .opacity(1 - unveil)
         }
-        .opacity(exiting ? 0 : 1)
-        .scaleEffect(exiting && !reduceMotion ? 1.02 : 1)
         .ignoresSafeArea()
         .allowsHitTesting(true)
         .accessibilityElement(children: .combine)
@@ -167,11 +179,20 @@ struct LaunchSequence: View {
             withAnimation(.easeOut(duration: 0.5).delay(1.9)) { tagline = 1 }
         }
 
-        let exitAt = duration - 0.2
-        DispatchQueue.main.asyncAfter(deadline: .now() + exitAt) {
-            withAnimation(.easeInOut(duration: 0.2)) { exiting = true }
+        // 收尾：石墨底先退（露出霜化后的 App），再让霜化层散掉（变清晰）。
+        // Reduce Motion 只保留这两个透明度变化，时长压到 1.4s。
+        let unveilAt = reduceMotion ? 0.75 : 2.00
+        let clearAt = reduceMotion ? 0.95 : 2.35
+        let finishAt = duration
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + unveilAt) {
+            veil = 1
+            withAnimation(.easeInOut(duration: reduceMotion ? 0.2 : 0.28)) { unveil = 1 }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + clearAt) {
+            withAnimation(.easeOut(duration: reduceMotion ? 0.35 : 0.6)) { veil = 0 }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + finishAt) {
             onFinish()
         }
     }
