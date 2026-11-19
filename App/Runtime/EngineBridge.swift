@@ -18,6 +18,11 @@ import Darwin
 ///     char* dsh_host_state(void);
 ///     char* dsh_host_drain(void);
 ///     void  dsh_host_free(char*);
+struct EngineStartError: LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
+}
+
 final class EngineBridge {
     enum Status: Equatable {
         case notBundled
@@ -99,9 +104,9 @@ final class EngineBridge {
 
     /// 启动引擎。路径语义与 dsh-Go 的 `EngineChannel.begin` 一致：
     /// runtime 是解出来的 runtime 树，frameworks 由 Bundle 提供，workspace 是会话可写的根。
-    func start(runtime: URL, guest: URL?, home: URL, cache: URL, workspace: URL) -> Result<Void, String> {
+    func start(runtime: URL, guest: URL?, home: URL, cache: URL, workspace: URL) throws {
         guard let startFn, let frameworks = Bundle.main.privateFrameworksPath else {
-            return .failure("引擎未加载")
+            throw EngineStartError(message: "引擎未加载")
         }
         var code: UnsafeMutablePointer<CChar>?
         var message: UnsafeMutablePointer<CChar>?
@@ -126,9 +131,8 @@ final class EngineBridge {
             let id = code.map { String(cString: $0) } ?? "ios_native_start"
             free(code)
             free(message)
-            return .failure("\(id)：\(reason)")
+            throw EngineStartError(message: "\(id)：\(reason)")
         }
-        return .success(())
     }
 
     /// 引擎当前的 JSON 状态（没有引擎或没启动时返回 nil）。

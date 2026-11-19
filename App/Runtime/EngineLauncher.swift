@@ -74,19 +74,14 @@ final class EngineLauncher: ObservableObject {
             self.manifest = manifest
 
             phase = .starting
-            let result = EngineBridge.shared.start(
+            try EngineBridge.shared.start(
                 runtime: installer.root,
                 guest: guest,
                 home: home,
                 cache: cache,
                 workspace: workspace
             )
-            switch result {
-            case .success:
-                phase = .running(EngineBridge.shared.state() ?? "{\"phase\":\"starting\"}")
-            case .failure(let reason):
-                phase = .failed(reason)
-            }
+            phase = .running(EngineBridge.shared.state() ?? "{\"phase\":\"starting\"}")
         } catch {
             phase = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
         }
