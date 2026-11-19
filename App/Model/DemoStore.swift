@@ -50,6 +50,12 @@ final class DemoStore: ObservableObject {
         activeSessionID = id
     }
 
+    /// 定时任务开关。之前列表里是个 `.constant(enabled)` 的假开关，点了不会变。
+    func setSchedule(_ id: UUID, enabled: Bool) {
+        guard let index = schedules.firstIndex(where: { $0.id == id }) else { return }
+        schedules[index].enabled = enabled
+    }
+
     func newSession(draft: String? = nil) {
         let session = ChatSession(
             id: UUID(),

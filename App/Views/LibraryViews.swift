@@ -99,14 +99,14 @@ struct ScheduleView: View {
         HStack(spacing: 14) {
             Image(systemName: "clock")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(item.enabled ? Theme.mint : Color.white.opacity(0.5))
+                .foregroundStyle(item.enabled ? Theme.mint : Fluid.Palette.slate)
                 .frame(width: 36, height: 36)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.title)
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Fluid.Palette.text)
                 Text("\(item.cadence) · 下次 \(nextText(item.nextRun))")
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.muted)
@@ -114,10 +114,12 @@ struct ScheduleView: View {
 
             Spacer(minLength: 8)
 
-            Toggle("", isOn: .constant(item.enabled))
-                .labelsHidden()
-                .tint(Theme.mint)
-                .disabled(true)
+            Toggle("", isOn: Binding(
+                get: { item.enabled },
+                set: { demo.setSchedule(item.id, enabled: $0) }
+            ))
+            .labelsHidden()
+            .tint(Theme.mint)
         }
         .padding(14)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
