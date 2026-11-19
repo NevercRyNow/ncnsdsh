@@ -1,0 +1,66 @@
+name: Build dsh-Go iOS engine
+
+# 只产出 dsh-Go 的 iOS 引擎产物（NodeMobile host + addons + 可选 iSH guest），
+# 不碰本 App 的构建。产物先在 CI 里验证能不能编出来，再决定怎么嵌进 App。
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: dsh-Go branch / tag / sha
+        required: true
+        default: ios/shared-runtime-after-ohos
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - name: Toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          python3 --version
+
+      - name: Clone dsh-Go
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${{ inputs.ref }}" \
+            https://github.com/ccch1mneyyy/dsh-Go.git dsh-go
+          cd dsh-go
+          git log --oneline -1
+
+      - name: Prepare engine (NodeMobile + runtime zip + addon sources)
+        run: |
+          set -o pipefail
+          cd dsh-go
+          ./tooling/ios/prepare-engine.sh 2>&1 | tee prepare.log
+
+      - name: Build native engine
+        run: |
+          set -o pipefail
+          cd dsh-go
+          ./tooling/ios/build-engine-native.sh 2>&1 | tee build.log
+
+      - name: List what came out
+        if: always()
+        run: |
+          cd dsh-go
+          echo '--- Engine dir ---'
+          ls -la app/ios/Engine 2>/dev/null || echo 'no app/ios/Engine'
+          echo '--- frameworks ---'
+          find . -name '*.framework' -maxdepth 6 2>/dev/null | head -20
+
+      - name: Upload engine artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-go-engine
+          path: |
+            dsh-go/app/ios/Engine/**
+            dsh-go/prepare.log
+            dsh-go/build.log
+          if-no-files-found: warn
+          retention-days: 14
