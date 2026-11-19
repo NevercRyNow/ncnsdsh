@@ -42,7 +42,8 @@ jobs:
         run: |
           set -o pipefail
           cd dsh-go
-          ./tooling/ios/build-engine-native.sh iphoneos 2>&1 | tee build.log
+          mkdir -p build/engine
+          ./tooling/ios/build-engine-native.sh iphoneos "$PWD/build/engine" 2>&1 | tee build.log
 
       - name: List what came out
         if: always()
@@ -50,8 +51,9 @@ jobs:
           cd dsh-go
           echo '--- Engine dir ---'
           ls -la app/ios/Engine 2>/dev/null || echo 'no app/ios/Engine'
-          echo '--- frameworks ---'
-          find . -name '*.framework' -maxdepth 6 2>/dev/null | head -20
+          echo '--- build/engine ---'
+          ls -la build/engine 2>/dev/null || echo 'no build/engine'
+          find build -name '*.framework' -maxdepth 3 2>/dev/null | head -20
 
       - name: Upload engine artifacts
         if: always()
@@ -59,7 +61,8 @@ jobs:
         with:
           name: dsh-go-engine
           path: |
-            dsh-go/app/ios/Engine/**
+            dsh-go/build/engine/**
+            dsh-go/app/ios/Engine/.ready
             dsh-go/prepare.log
             dsh-go/build.log
           if-no-files-found: warn
