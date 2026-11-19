@@ -58,7 +58,7 @@ struct WorkbenchView: View {
                     }
                 }
         }
-        .background(Fluid.Palette.canvas.ignoresSafeArea())
+        .background(Fluid.Palette.obsidian.ignoresSafeArea())
         .animation(Fluid.Motion.respecting(reduceMotion, Fluid.Motion.spatial), value: focus)
         .toolbar(.hidden, for: .navigationBar)
         .accessibilityLabel("工作台")
@@ -121,7 +121,7 @@ struct WorkbenchView: View {
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Fluid.Palette.text)
                     .frame(width: 32, height: 32)
-                    .background(Fluid.Palette.raised, in: Circle())
+                    .background(Fluid.Palette.graphite, in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("关闭工作台")
