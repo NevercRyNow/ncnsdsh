@@ -73,7 +73,7 @@ struct BuildTutorialView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("在自己手机上出一个 IPA")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
             Text("不需要 Mac。GitHub 提供 macOS 机器，你只需要一个仓库和一个 Token。")
                 .font(.system(size: 13))
                 .foregroundStyle(Theme.muted)
@@ -87,13 +87,13 @@ struct BuildTutorialView: View {
             HStack(spacing: 10) {
                 Text("\(step.id)")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.accent)
                     .frame(width: 24, height: 24)
                     .background(Theme.accent.opacity(0.22), in: Circle())
 
                 Text(step.title)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Fluid.Palette.text)
             }
 
             Text(step.body)
@@ -106,7 +106,7 @@ struct BuildTutorialView: View {
                 HStack(alignment: .top, spacing: 8) {
                     Text(code)
                         .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.9))
+                        .foregroundStyle(Fluid.Palette.text.opacity(0.9))
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     Button {
@@ -133,7 +133,7 @@ struct BuildTutorialView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("常见问题")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Fluid.Palette.text)
 
             row("403 权限不够", "Token 里 Actions 必须是 Read and write，不是 Read。")
             row("404 找不到仓库", "Owner / Repo 拼错，或者 Token 没勾这个仓库。")
@@ -151,7 +151,7 @@ struct BuildTutorialView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white.opacity(0.92))
+                .foregroundStyle(Fluid.Palette.text.opacity(0.92))
             Text(body)
                 .font(.system(size: 12))
                 .foregroundStyle(Theme.muted)

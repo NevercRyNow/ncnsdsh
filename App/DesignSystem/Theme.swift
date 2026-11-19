@@ -4,16 +4,31 @@ import UIKit
 /// NcnsDSH 的视觉基调：近黑影院底 + 靛蓝/薄荷双色强调。
 /// 旧名字（paper/card/muted/markGradient）保留，网页兜底页还在用。
 enum Theme {
-    static let accent = Color(hex: 0x0A84FF)
-    static let mint = Color(hex: 0x32D74B)
+    static let accent = adaptive(dark: 0x0A84FF, light: 0x0A6CFF)
+    static let mint = adaptive(dark: 0x32D74B, light: 0x1B7A2F)
 
-    static let ink = Color.black
-    static let paper = Color.black
-    static let card = Color.white.opacity(0.06)
-    static let raised = Color.white.opacity(0.10)
-    static let hairline = Color.white.opacity(0.12)
-    static let muted = Color.white.opacity(0.60)
-    static let dim = Color.white.opacity(0.36)
+    // 深色值与旧版逐值一致（近黑底 + 白色透明度分层），浅色另配一套。
+    static let ink = adaptive(dark: 0x000000, light: 0xF5F5F7)
+    static let paper = adaptive(dark: 0x000000, light: 0xF5F5F7)
+    static let card = overlay(dark: 0.06, light: 0.04)
+    static let raised = overlay(dark: 0.10, light: 0.06)
+    static let hairline = overlay(dark: 0.12, light: 0.10)
+    static let muted = overlay(dark: 0.60, light: 0.62)
+    static let dim = overlay(dark: 0.36, light: 0.44)
+
+    private static func adaptive(dark: UInt32, light: UInt32) -> Color {
+        Color(uiColor: UIColor { trait in
+            UIColor(rgb: trait.userInterfaceStyle == .dark ? dark : light)
+        })
+    }
+
+    private static func overlay(dark: Double, light: Double) -> Color {
+        Color(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(white: 1, alpha: dark)
+                : UIColor(white: 0, alpha: light)
+        })
+    }
 
     static let markGradient = LinearGradient(
         colors: [accent, Color(hex: 0x8C61FA)],

@@ -71,7 +71,7 @@ struct NcnsGlassButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(prominent ? Color.white : Color.white.opacity(0.92))
+            .foregroundStyle(prominent ? Color.white : Fluid.Palette.text)
             .padding(.horizontal, compact ? 13 : 18)
             .padding(.vertical, compact ? 7 : 11)
             .background(
@@ -83,7 +83,7 @@ struct NcnsGlassButtonStyle: ButtonStyle {
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(Color.white.opacity(prominent ? 0.0 : 0.10), lineWidth: 0.5)
+                    .strokeBorder(prominent ? Color.clear : Fluid.Palette.slate.opacity(0.45), lineWidth: 0.5)
             )
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(Motion.snappy, value: configuration.isPressed)
