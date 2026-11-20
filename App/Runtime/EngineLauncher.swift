@@ -36,6 +36,17 @@ final class EngineLauncher: ObservableObject {
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
+    /// 引擎自己报的状态（dsh_host_state 的 JSON 解出来的）。
+    struct EngineState: Equatable {
+        var phase = ""
+        var baseURL: URL?
+        var token = ""
+        var errorCode = ""
+        var errorMessage = ""
+    }
+
+    @Published private(set) var state = EngineState()
+
     var runtimeVersion: String? { manifest?.runtimeVersion }
     var nodeVersion: String? { manifest?.nodeVersion }
     var fileCount: Int? { manifest?.files.count }
@@ -84,7 +95,9 @@ final class EngineLauncher: ObservableObject {
                 cache: cache,
                 workspace: workspace
             )
-            phase = .running(EngineBridge.shared.state() ?? "{\"phase\":\"starting\"}")
+            let raw = EngineBridge.shared.state() ?? "{}"
+            state = Self.parse(raw)
+            phase = .running(raw)
         } catch {
             phase = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)
         }
@@ -108,7 +121,36 @@ final class EngineLauncher: ObservableObject {
     func drain() -> String? { EngineBridge.shared.drain() }
 
     func refreshState() {
-        guard isRunning, let state = EngineBridge.shared.state() else { return }
-        phase = .running(state)
+        guard isRunning, let raw = EngineBridge.shared.state() else { return }
+        state = Self.parse(raw)
+        phase = .running(raw)
+    }
+
+    /// 状态就是一行 JSON：phase / baseUrl / token / errorCode / errorMessage / exitCode。
+    static func parse(_ raw: String) -> EngineState {
+        var result = EngineState()
+        guard let data = raw.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return result }
+        result.phase = object["phase"] as? String ?? ""
+        result.token = object["token"] as? String ?? ""
+        result.errorCode = object["errorCode"] as? String ?? ""
+        result.errorMessage = object["errorMessage"] as? String ?? ""
+        if let text = object["baseUrl"] as? String, !text.isEmpty {
+            result.baseURL = URL(string: text)
+        }
+        return result
+    }
+
+    /// 用引擎自己给的 baseUrl + token 探测 /dsh-go/v1/capabilities。
+    func probeBridge() async -> String {
+        guard let url = state.baseURL else { return "引擎还没报出地址" }
+        let host = Host(id: UUID(), name: "内置引擎", baseURL: url, token: state.token)
+        do {
+            let caps = try await DshBridge.capabilities(for: host)
+            return "协议 v\(caps.protocolVersion) · bridge \(caps.bridgeVersion) · \(caps.capabilities.count) 项能力"
+        } catch {
+            return (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
     }
 }

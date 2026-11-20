@@ -9,12 +9,20 @@ struct EngineConsoleView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var events: String = ""
+    @State private var bridgeLine: String = ""
+    @State private var probing = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     statusCard
+                    if let url = engine.state.baseURL {
+                        block("引擎地址", text: url.absoluteString + (engine.state.token.isEmpty ? "" : "\ntoken: \(engine.state.token)"))
+                    }
+                    if !bridgeLine.isEmpty {
+                        block("桥探测", text: bridgeLine)
+                    }
                     if let state = currentState {
                         block("状态", text: state)
                     }
@@ -73,9 +81,22 @@ struct EngineConsoleView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if engine.isRunning {
-                Button("刷新事件") { refresh() }
+                HStack(spacing: 14) {
+                    Button("刷新事件") { refresh() }
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Fluid.Palette.iceBlue)
+
+                    Button(probing ? "探测中…" : "探测桥") {
+                        probing = true
+                        Task {
+                            bridgeLine = await engine.probeBridge()
+                            probing = false
+                        }
+                    }
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Fluid.Palette.iceBlue)
+                    .disabled(probing)
+                }
             }
         }
         .padding(16)
